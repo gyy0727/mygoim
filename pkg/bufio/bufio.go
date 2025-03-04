@@ -309,7 +309,6 @@ type Writer struct {
 	wr  io.Writer
 }
 
-
 func NewWriterSize(w io.Writer, size int) *Writer {
 
 	b, ok := w.(*Writer)
@@ -325,12 +324,10 @@ func NewWriterSize(w io.Writer, size int) *Writer {
 	}
 }
 
-
-//*新建默认缓冲区大小的写结构体 
+// *新建默认缓冲区大小的写结构体
 func NewWriter(w io.Writer) *Writer {
 	return NewWriterSize(w, defaultBufSize)
 }
-
 
 func (b *Writer) Reset(w io.Writer) {
 	b.err = nil
@@ -338,10 +335,137 @@ func (b *Writer) Reset(w io.Writer) {
 	b.wr = w
 }
 
-//*根据传入的buf设置 
+// *根据传入的buf设置
 func (b *Writer) ResetBuffer(w io.Writer, buf []byte) {
 	b.buf = buf
 	b.err = nil
 	b.n = 0
 	b.wr = w
+}
+
+// *刷新缓冲区到磁盘
+func (b *Writer) Flush() error {
+	err := b.flush()
+	return err
+}
+
+func (b *Writer) flush() error {
+	//*确保刷新到磁盘之前没有发生过错误
+	if b.err != nil {
+		return b.err
+	}
+	if b.n == 0 {
+		return nil
+	}
+	//*将缓冲区的数据写入流
+	n, err := b.wr.Write(b.buf[0:b.n])
+	if n < b.n && err == nil {
+		err = io.ErrShortWrite
+	}
+	//*更新缓冲区的数据位置
+	if err != nil {
+		if n > 0 && n < b.n {
+			copy(b.buf[0:b.n-n], b.buf[n:b.n])
+		}
+		b.n -= n
+		b.err = err
+		return err
+	}
+	b.n = 0
+	return nil
+}
+
+// *返回缓冲区空余的空间大小
+func (b *Writer) Available() int { return len(b.buf) - b.n }
+
+// *返回缓冲区已经写入的数据的大小
+func (b *Writer) Buffered() int { return b.n }
+
+// (将用户提供的缓冲区)
+func (b *Writer) Write(p []byte) (nn int, err error) {
+	//*可写的空余空间不足以全部装下
+	for len(p) > b.Available() && b.err == nil {
+		var n int
+		//*已经写入的数据量为 0
+		//*如果缓冲区为空（b.Buffered() == 0），直接将数据 p 写入底层 io.Writer，避免额外的拷贝操作。
+		//*如果缓冲区不为空，将数据 p 的一部分拷贝到缓冲区中，然后调用 flush 方法将缓冲区数据写入底层 io.Writer。
+		//*更新已写入的字节数 nn 和剩余数据 p。
+		if b.Buffered() == 0 {
+			//*直接写入io流
+			n, b.err = b.wr.Write(p)
+		} else {
+			n = copy(b.buf[b.n:], p)
+			b.n += n
+			b.flush()
+		}
+		nn += n
+		p = p[n:]
+	}
+	if b.err != nil {
+		return nn, b.err
+	}
+	n := copy(b.buf[b.n:], p)
+	b.n += n
+	nn += n
+	return nn, nil
+}
+
+// *该方法用于将数据 p 直接写入底层 io.Writer，绕过缓冲区，并返回实际写入的字节数和错误信息
+func (b *Writer) WriteRaw(p []byte) (nn int, err error) {
+	//*之前没有出现过错误
+	if b.err != nil {
+		return 0, b.err
+	}
+	//*缓冲区为空
+	if b.Buffered() == 0 {
+		//*直接写入底层
+		nn, err = b.wr.Write(p)
+		b.err = err
+	} else {
+		//*写入缓冲区
+		nn, err = b.Write(p)
+	}
+	return
+}
+
+// *该方法用于返回缓冲区中的下 n 个字节，但不会推进写指针。返回的字节在下一次写入操作后失效
+func (b *Writer) Peek(n int) ([]byte, error) {
+	if n < 0 {
+		return nil, ErrNegativeCount
+	}
+	if n > len(b.buf) {
+		return nil, ErrBufferFull
+	}
+	for b.Available() < n && b.err == nil {
+		b.flush()
+	}
+	if b.err != nil {
+		return nil, b.err
+	}
+	d := b.buf[b.n : b.n+n]
+	b.n += n
+	return d, nil
+}
+
+// *写入字符串
+func (b *Writer) WriteString(s string) (int, error) {
+	nn := 0
+	//*字符串的长度大于空余空间
+	for len(s) > b.Available() && b.err == nil {
+		//*将s拷贝到缓冲区
+		n := copy(b.buf[b.n:], s)
+		b.n += n
+		nn += n
+		s = s[n:]
+		//*刷入磁盘
+		b.flush()
+	}
+	if b.err != nil {
+		return nn, b.err
+	}
+	//*继续拷贝到缓冲区
+	n := copy(b.buf[b.n:], s)
+	b.n += n
+	nn += n
+	return nn, nil
 }
