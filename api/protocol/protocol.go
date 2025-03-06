@@ -169,6 +169,7 @@ func (p *Proto) ReadWebsocket(ws *websocket.Conn) (err error) {
 	p.Ver = int32(binary.BigEndian.Int16(buf[_verOffset:_opOffset]))
 	//*解析请求操作码
 	p.Op = binary.BigEndian.Int32(buf[_opOffset:_seqOffset])
+	//*解析请求序列号
 	p.Seq = binary.BigEndian.Int32(buf[_seqOffset:])
 	if packLen < 0 || packLen > _maxPackSize {
 		return ErrProtoPackLen
@@ -181,5 +182,54 @@ func (p *Proto) ReadWebsocket(ws *websocket.Conn) (err error) {
 	} else {
 		p.Body = nil
 	}
+	return
+}
+
+
+//*发送消息
+func (p *Proto) WriteWebsocket(ws *websocket.Conn) (err error) {
+	var (
+		buf     []byte
+		packLen int
+	)
+	//*头部长度+请求体长度 
+	packLen = _rawHeaderSize + len(p.Body)
+	if err = ws.WriteHeader(websocket.BinaryMessage, packLen); err != nil {
+		return
+	}
+	if buf, err = ws.Peek(_rawHeaderSize); err != nil {
+		return
+	}
+	binary.BigEndian.PutInt32(buf[_packOffset:], int32(packLen))
+	binary.BigEndian.PutInt16(buf[_headerOffset:], int16(_rawHeaderSize))
+	binary.BigEndian.PutInt16(buf[_verOffset:], int16(p.Ver))
+	binary.BigEndian.PutInt32(buf[_opOffset:], p.Op)
+	binary.BigEndian.PutInt32(buf[_seqOffset:], p.Seq)
+	if p.Body != nil {
+		err = ws.WriteBody(p.Body)
+	}
+	return
+}
+
+//*发送心跳消息 
+func (p *Proto) WriteWebsocketHeart(wr *websocket.Conn, online int32) (err error) {
+	var (
+		buf     []byte
+		packLen int
+	)
+	packLen = _rawHeaderSize + _heartSize
+	
+	if err = wr.WriteHeader(websocket.BinaryMessage, packLen); err != nil {
+		return
+	}
+	if buf, err = wr.Peek(packLen); err != nil {
+		return
+	}
+	binary.BigEndian.PutInt32(buf[_packOffset:], int32(packLen))
+	binary.BigEndian.PutInt16(buf[_headerOffset:], int16(_rawHeaderSize))
+	binary.BigEndian.PutInt16(buf[_verOffset:], int16(p.Ver))
+	binary.BigEndian.PutInt32(buf[_opOffset:], p.Op)
+	binary.BigEndian.PutInt32(buf[_seqOffset:], p.Seq)
+	binary.BigEndian.PutInt32(buf[_heartOffset:], online)
 	return
 }

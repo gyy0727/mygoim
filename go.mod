@@ -3,6 +3,7 @@ module github.com/gyy0727/mygoim
 go 1.22
 
 require (
+	github.com/BurntSushi/toml v1.4.0
 	github.com/golang/protobuf v1.5.4
 	go.uber.org/zap v1.27.0
 	google.golang.org/grpc v1.70.0
