@@ -107,100 +107,101 @@ func Default() *Config {
 	}
 }
 
-// *comet配置
+// *Comet配置
 type Config struct {
-	Debug     bool        //*是否开启调试
-	Env       *Env        //*环境相关配置
-	Etcd      *EtcdConfig //*服务发现
-	TCP       *TCP        //*tcp连接
-	Websocket *Websocket  //*websocket相关配置
-	Protocol  *Protocol   //*协议相关配置
-	Bucket    *Bucket     //*连接桶相关配置
-	RPCClient *RPCClient  //*rpc客户端相关配置
-	RPCServer *RPCServer  //*rpc服务端相关配置
-	Whitelist *Whitelist  //*白名单相关配置
+	Debug     bool        // *是否开启调试模式
+	Env       *Env        // *环境相关的配置
+	Etcd      *EtcdConfig // *Etcd服务发现配置
+	TCP       *TCP        // *TCP连接配置
+	Websocket *Websocket  // *WebSocket连接配置
+	Protocol  *Protocol   // *协议相关的配置
+	Bucket    *Bucket     // *连接桶的配置
+	RPCClient *RPCClient  // *RPC客户端配置
+	RPCServer *RPCServer  // *RPC服务端配置
+	Whitelist *Whitelist  // *白名单配置
 }
 
+// *Etcd服务发现配置
 type EtcdConfig struct {
-	Endpoints   []string      //*etcd 集群地址列表
-	DialTimeout time.Duration //*连接超时时间
-	Username    string        //*用户名（可选）
-	Password    string        //*密码（可选）
-	Prefix      string        //*键前缀（可选）
+	Endpoints   []string      // *Etcd集群地址列表
+	DialTimeout time.Duration // *连接超时时间
+	Username    string        // *用户名（可选，用于认证）
+	Password    string        // *密码（可选，用于认证）
+	Prefix      string        // *键前缀（可选，用于命名空间隔离）
 }
 
 // *环境相关的配置
 type Env struct {
-	Region    string   //*区域
-	Zone      string   //*可用区
-	DeployEnv string   //*部署环境
-	Host      string   //*主机名
-	Weight    int64    //*负载权重
-	Offline   bool     //*是否在线
-	Addrs     []string //*服务器地址列表
+	Region    string   // *区域（如 "asia-east"）
+	Zone      string   // *可用区（如 "zone1"）
+	DeployEnv string   // *部署环境（如 "prod" 或 "dev"）
+	Host      string   // *主机名（如服务器的hostname）
+	Weight    int64    // *负载权重（用于负载均衡）
+	Offline   bool     // *是否标记为离线状态
+	Addrs     []string // *服务器地址列表（如IP:端口）
 }
 
-// *rpc客户端配置
+// *RPC客户端配置
 type RPCClient struct {
-	Dial    xtime.Duration //*连接超时
-	Timeout xtime.Duration //*请求超时
+	Dial    xtime.Duration // *连接超时时间
+	Timeout xtime.Duration // *请求超时时间
 }
 
-// *rocserver配置
+// *RPC服务端配置
 type RPCServer struct {
-	Network           string         //*网络协议
-	Addr              string         //*监听地址
-	Timeout           xtime.Duration //*超时时间
-	IdleTimeout       xtime.Duration //*空闲连接超时时间
-	MaxLifeTime       xtime.Duration //*连接的最大生命周期
-	ForceCloseWait    xtime.Duration //*强制关闭等待时间
-	KeepAliveInterval xtime.Duration //*心跳超时间隔时间
-	KeepAliveTimeout  xtime.Duration //*心跳超时时间
+	Network           string         // *网络协议（如 "tcp"）
+	Addr              string         // *监听地址（如 "0.0.0.0:8080"）
+	Timeout           xtime.Duration // *请求处理超时时间
+	IdleTimeout       xtime.Duration // *空闲连接超时时间
+	MaxLifeTime       xtime.Duration // *连接的最大生命周期
+	ForceCloseWait    xtime.Duration // *强制关闭前的等待时间
+	KeepAliveInterval xtime.Duration // *心跳检测间隔时间
+	KeepAliveTimeout  xtime.Duration // *心跳超时时间
 }
 
-// *tcp连接配置
+// *TCP连接配置
 type TCP struct {
-	Bind         []string //*绑定地址列表
-	Sndbuf       int      //*发送缓冲区大小
-	Rcvbuf       int      //*接受缓冲区大小
-	KeepAlive    bool     //*是否开启tcpkeepalive
-	Reader       int      //*读取协程数量
-	ReadBuf      int      //*读取缓冲区大小
-	ReadBufSize  int      //*读取缓冲区容量
-	Writer       int      //*写入协程数量
-	WriteBuf     int      //*写入缓冲区大小
-	WriteBufSize int      //*写入缓冲区容量
+	Bind         []string // *绑定地址列表（如 ["0.0.0.0:8080"]）
+	Sndbuf       int      // *发送缓冲区大小（单位：字节）
+	Rcvbuf       int      // *接收缓冲区大小（单位：字节）
+	KeepAlive    bool     // *是否启用TCP KeepAlive
+	Reader       int      // *读取goroutine数量
+	ReadBuf      int      // *读取缓冲区大小（单位：字节）
+	ReadBufSize  int      // *读取缓冲区容量（单位：字节）
+	Writer       int      // *写入goroutine数量
+	WriteBuf     int      // *写入缓冲区大小（单位：字节）
+	WriteBufSize int      // *写入缓冲区容量（单位：字节）
 }
 
-// *定义 WebSocket 连接的配置
+// *WebSocket连接配置
 type Websocket struct {
-	Bind        []string //*绑定地址
-	TLSOpen     bool     //*是否开启tls
-	TLSBind     []string //*tls绑定地址
-	CertFile    string   //*证书文件路径
-	PrivateFile string   //*私钥文件路径
+	Bind        []string // *绑定地址列表（如 ["0.0.0.0:8080"]）
+	TLSOpen     bool     // *是否启用TLS
+	TLSBind     []string // *TLS绑定地址列表（如 ["0.0.0.0:443"]）
+	CertFile    string   // *TLS证书文件路径
+	PrivateFile string   // *TLS私钥文件路径
 }
 
-// *定义协议相关的配置
+// *协议相关的配置
 type Protocol struct {
-	Timer            int            //*定时器数量
-	TimerSize        int            //*定时器的容量
-	SvrProto         int            //*服务器协议版本
-	CliProto         int            //*客户端协议版本
-	HandshakeTimeout xtime.Duration //*握手超时时间
+	Timer            int            // *定时器数量（用于协议处理）
+	TimerSize        int            // *定时器容量（每个定时器的缓冲大小）
+	SvrProto         int            // *服务器协议版本
+	CliProto         int            // *客户端协议版本
+	HandshakeTimeout xtime.Duration // *握手超时时间
 }
 
-// *定义连接桶的配置
+// *连接桶的配置
 type Bucket struct {
-	Size          int    //*桶的大小
-	Channel       int    //*通道数量
-	Room          int    //*房间数量
-	RoutineAmount uint64 //*协程数量
-	RoutineSize   int    //*协程容量
+	Size          int    // *桶的最大容量，表示可以存储的总连接数
+	Channel       int    // *用户连接映射的初始容量（chs map 的预分配大小）
+	Room          int    // *房间映射的初始容量（rooms map 的预分配大小）
+	RoutineAmount uint64 // *用于广播消息的goroutine数量
+	RoutineSize   int    // *每个广播通道的缓冲容量（routines中每个chan的缓冲大小）
 }
 
 // *白名单配置
 type Whitelist struct {
-	Whitelist []int64 //*白名单列表
-	WhiteLog  string  //*白名单日志路径
+	Whitelist []int64 // *白名单用户ID列表
+	WhiteLog  string  // *白名单日志文件路径
 }

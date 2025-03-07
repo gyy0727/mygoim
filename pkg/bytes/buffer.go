@@ -25,6 +25,9 @@ func NewPool(num, size int) (p *Pool) {
 	p.init(num, size)
 	return
 }
+func (p *Pool) Init(num, size int) {
+	p.init(num, size)
+}
 
 func (p *Pool) init(num, size int) {
 	p.num = num
@@ -41,7 +44,7 @@ func (p *Pool) grow() {
 		bs  []Buffer
 		buf []byte
 	)
-	//*分配一个连续的缓冲区 
+	//*分配一个连续的缓冲区
 	buf = make([]byte, p.max)
 	//*创建一个指定数量的缓冲区切片
 	bs = make([]Buffer, p.num)
@@ -56,8 +59,7 @@ func (p *Pool) grow() {
 	b.next = nil
 }
 
-
-//*链表的方式组成一个内存池
+// *链表的方式组成一个内存池
 func (p *Pool) Get() (b *Buffer) {
 	p.lock.Lock()
 	if b = p.free; b == nil {
@@ -68,7 +70,6 @@ func (p *Pool) Get() (b *Buffer) {
 	p.lock.Unlock()
 	return
 }
-
 
 func (p *Pool) Put(b *Buffer) {
 	p.lock.Lock()
