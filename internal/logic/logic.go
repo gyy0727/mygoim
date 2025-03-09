@@ -89,12 +89,15 @@ func (l *Logic) initNodes() {
 }
 
 func (l *Logic) newNodes(res naming.Resolver) {
+	//*res.Fetch() 从服务发现模块中获取当前的所有节点信息
 	if zoneIns, ok := res.Fetch(); ok {
 		var (
 			totalConns int64
 			totalIPs   int64
-			allIns     []*naming.Instance
+			allIns     []*naming.Instance //* 用于存储所有有效的节点实例
 		)
+		//*对每个节点，检查其元数据是否有效
+		//*如果元数据缺失或无效，跳过该节点并记录错误日志
 		for _, zins := range zoneIns.Instances {
 			for _, ins := range zins {
 				if ins.Metadata == nil {
