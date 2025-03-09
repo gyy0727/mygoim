@@ -229,7 +229,8 @@ func (b *Bucket) IPCount() (res map[string]struct{}) {
 	return
 }
 
-// UpRoomsCount update all room count
+//*实现房间人数统计更新
+//*roomCountMap通常从外部存储（如Redis集群）获取全局统计
 func (b *Bucket) UpRoomsCount(roomCountMap map[string]int32) {
 	var (
 		roomID string

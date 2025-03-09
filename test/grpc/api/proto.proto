@@ -1,0 +1,16 @@
+syntax = "proto3";
+package api;
+option go_package = "github.com/gyy0727/mygoim/test/grpc/api";
+
+message request {
+    int64 x =1;
+    int64 y =2;
+}
+
+message response{
+    int64 z =1;
+}
+
+service addtwo{
+    rpc add (request)returns (response){}
+}
