@@ -249,7 +249,7 @@ func (s *Server) ServeWebsocket(conn net.Conn, rp, wp *bytes.Pool, tr *xtime.Tim
 			tr.Set(trd, hb)
 			p.Op = protocol.OpHeartbeatReply
 			p.Body = nil
-			// NOTE: send server heartbeat for a long time
+			
 			if now := time.Now(); now.Sub(lastHB) > serverHeartbeat {
 				if err1 := s.Heartbeat(ctx, ch.Mid, ch.Key); err1 == nil {
 					lastHB = now

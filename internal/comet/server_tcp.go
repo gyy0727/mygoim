@@ -171,7 +171,7 @@ func (s *Server) ServeTCP(conn *net.TCPConn, rp, wp *bytes.Pool, tr *xtime.Timer
 			tr.Set(trd, hb)
 			p.Op = protocol.OpHeartbeatReply
 			p.Body = nil
-			// NOTE: send server heartbeat for a long time
+
 			if now := time.Now(); now.Sub(lastHb) > serverHeartbeat {
 				if err1 := s.Heartbeat(ctx, ch.Mid, ch.Key); err1 == nil {
 					lastHb = now
