@@ -4,10 +4,7 @@ package goim.protocol;
 
 option go_package = "github.com/gyy0727/mygoim/api/protocol;protocol";
 
-/*
- * v1.0.0
- * protocol
- */
+
 message Proto {
   int32 ver = 1;
   int32 op = 2;
