@@ -11,6 +11,8 @@ import (
 	"github.com/gyy0727/mygoim/internal/logic/model"
 )
 
+
+//*主要的逻辑就是将用户和server的映射关系存储在redis中，
 func (l *Logic) Connect(c context.Context, server, cookie string, token []byte) (mid int64, key, roomID string, accepts []int32, hb int64, err error) {
 	var params struct {
 		Mid      int64   `json:"mid"`
@@ -37,6 +39,7 @@ func (l *Logic) Connect(c context.Context, server, cookie string, token []byte) 
 	return
 }
 
+//*将用户和server的映射关系从redis中删除
 func (l *Logic) Disconnect(c context.Context, mid int64, key, server string) (has bool, err error) {
 	if has, err = l.dao.DelMapping(c, mid, key, server); err != nil {
 		log.Errorf("l.dao.DelMapping(%d,%s) error(%v)", mid, key, server)
@@ -46,7 +49,7 @@ func (l *Logic) Disconnect(c context.Context, mid int64, key, server string) (ha
 	return
 }
 
-// Heartbeat heartbeat a conn.
+//*更新用户和server的映射关系的过期时间
 func (l *Logic) Heartbeat(c context.Context, mid int64, key, server string) (err error) {
 	has, err := l.dao.ExpireMapping(c, mid, key)
 	if err != nil {
@@ -63,7 +66,7 @@ func (l *Logic) Heartbeat(c context.Context, mid int64, key, server string) (err
 	return
 }
 
-// RenewOnline renew a server online.
+//*获取用户和server的映射关系
 func (l *Logic) RenewOnline(c context.Context, server string, roomCount map[string]int32) (map[string]int32, error) {
 	online := &model.Online{
 		Server:    server,
@@ -76,7 +79,7 @@ func (l *Logic) RenewOnline(c context.Context, server string, roomCount map[stri
 	return l.roomCount, nil
 }
 
-// Receive receive a message.
+//*接受一个消息 
 func (l *Logic) Receive(c context.Context, mid int64, proto *protocol.Proto) (err error) {
 	log.Infof("receive mid:%d message:%+v", mid, proto)
 	return

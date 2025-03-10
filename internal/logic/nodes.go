@@ -10,12 +10,12 @@ import (
 	"github.com/gyy0727/mygoim/internal/logic/model"
 )
 
-// NodesInstances get servers info.
+//*返回node实例
 func (l *Logic) NodesInstances(c context.Context) (res []*naming.Instance) {
 	return l.nodes
 }
 
-// NodesWeighted get node list.
+//*该方法根据平台和客户端 IP 返回加权节点列表
 func (l *Logic) NodesWeighted(c context.Context, platform, clientIP string) *pb.NodesReply {
 	reply := &pb.NodesReply{
 		Domain:       l.c.Node.DefaultDomain,
@@ -43,6 +43,7 @@ func (l *Logic) NodesWeighted(c context.Context, platform, clientIP string) *pb.
 	return reply
 }
 
+//*该方法根据客户端 IP 获取域名和地址列表
 func (l *Logic) nodeAddrs(c context.Context, clientIP string) (domains, addrs []string) {
 	var (
 		region string
@@ -55,7 +56,7 @@ func (l *Logic) nodeAddrs(c context.Context, clientIP string) (domains, addrs []
 	return l.loadBalancer.NodeAddrs(region, l.c.Node.HostDomain, l.c.Node.RegionWeight)
 }
 
-// location find a geolocation of an IP address including province, region and country.
+//*该方法根据客户端 IP 获取地理位置信息
 func (l *Logic) location(c context.Context, clientIP string) (province string, err error) {
 	// province: config mapping
 	return
