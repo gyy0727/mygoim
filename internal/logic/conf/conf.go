@@ -6,19 +6,17 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/bilibili/discovery/naming"
-	xtime "github.com/gyy0727/mygoim/pkg/time"
-
 	"github.com/BurntSushi/toml"
+	xtime "github.com/gyy0727/mygoim/pkg/time"
 )
 
 var (
 	confPath  string  //*配置文件的路径
 	region    string  //*当前服务的区域（如 sh 表示上海）
-	zone      string  //* 当前服务的可用区（如 sh001 表示上海 001 区）
+	zone      string  //*当前服务的可用区（如 sh001 表示上海 001 区）
 	deployEnv string  //*部署环境（如 dev 表示开发环境，prod 表示生产环境）
 	host      string  //*当前主机的主机名
-	weight    int64   //* 负载均衡权重
+	weight    int64   //*负载均衡权重
 	Conf      *Config //*全局的配置对象，类型为 *Config
 )
 
@@ -45,8 +43,14 @@ func Init() (err error) {
 // *Default 函数返回一个默认的 Config 对象
 func Default() *Config {
 	return &Config{
-		Env:       &Env{Region: region, Zone: zone, DeployEnv: deployEnv, Host: host, Weight: weight},
-		Discovery: &naming.Config{Region: region, Zone: zone, Env: deployEnv, Host: host},
+		Env: &Env{Region: region, Zone: zone, DeployEnv: deployEnv, Host: host, Weight: weight},
+		Discovery: &EtcdConfig{
+			Endpoints:   []string{"http://127.0.0.1:2379"}, // 默认的 etcd 集群地址
+			DialTimeout: 5,                                 // 默认连接超时时间为 5 秒
+			Username:    "",                                // 默认无用户名
+			Password:    "",                                // 默认无密码
+			TLS:         nil,                               // 默认不使用 TLS
+		},
 		HTTPServer: &HTTPServer{
 			Network:      "tcp",
 			Addr:         "3111",
@@ -70,7 +74,7 @@ func Default() *Config {
 
 type Config struct {
 	Env        *Env                //*环境相关的配置
-	Discovery  *naming.Config      //*服务发现相关的配置
+	Discovery  *EtcdConfig         //*服务发现相关的配置
 	RPCClient  *RPCClient          //*RPC 客户端配置
 	RPCServer  *RPCServer          //*RPC 服务端配置
 	HTTPServer *HTTPServer         //*HTTP 服务端配置
@@ -79,6 +83,20 @@ type Config struct {
 	Node       *Node               //*节点相关的配置
 	Backoff    *Backoff            //*重试策略相关的配置
 	Regions    map[string][]string //*区域映射配
+}
+
+type EtcdConfig struct {
+	Endpoints   []string   //*etcd 集群的端点列表
+	DialTimeout int        //*连接 etcd 的超时时间（单位：秒）
+	Username    string     //*etcd 用户名
+	Password    string     //*etcd 密码
+	TLS         *TLSConfig //*TLS 配置
+}
+
+type TLSConfig struct {
+	CertFile string //*客户端证书文件路径
+	KeyFile  string //*客户端私钥文件路径
+	CAFile   string //*CA 证书文件路径
 }
 
 // *用于存储环境相关的配置
@@ -126,8 +144,8 @@ type Redis struct {
 
 // *kafka相关配置
 type Kafka struct {
-	Topic   string
-	Brokers []string
+	Topic   string   //*表示Kafka消息的主题名称
+	Brokers []string //*存储Kafka集群的Broker地址列表
 }
 
 // *RPC客户端配置

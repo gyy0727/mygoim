@@ -16,7 +16,7 @@ type Dao struct {
 	redisExpire int32              //*Redis 数据的过期时间(秒)
 }
 
-//*新建一个数据访问对象（Dao）的实例
+// *新建一个数据访问对象（Dao）的实例
 func New(c *conf.Config) *Dao {
 	d := &Dao{
 		c:           c,
@@ -27,12 +27,12 @@ func New(c *conf.Config) *Dao {
 	return d
 }
 
-//*新建一个kafka客户端 
+// *新建一个kafka客户端
 func newKafkaPub(c *conf.Kafka) kafka.SyncProducer {
 	kc := kafka.NewConfig()
-	kc.Producer.RequiredAcks = kafka.WaitForAll
-	kc.Producer.Retry.Max = 10                  
-	kc.Producer.Return.Successes = true
+	kc.Producer.RequiredAcks = kafka.WaitForAll //*这意味着生产者会等待所有副本（包括 Leader 和所有 Follower）都确认消息已写入后，才认为消息发送成功
+	kc.Producer.Retry.Max = 10                  //*设置生产者的最大重试次数为 10
+	kc.Producer.Return.Successes = true         //*这意味着生产者会返回成功发送的消息的元数据
 	pub, err := kafka.NewSyncProducer(c.Brokers, kc)
 	if err != nil {
 		panic(err)
@@ -40,7 +40,7 @@ func newKafkaPub(c *conf.Kafka) kafka.SyncProducer {
 	return pub
 }
 
-//*新建一个redis客户端 
+// *新建一个redis客户端
 func newRedis(c *conf.Redis) *redis.Pool {
 	return &redis.Pool{
 		MaxIdle:     c.Idle,
@@ -61,12 +61,12 @@ func newRedis(c *conf.Redis) *redis.Pool {
 	}
 }
 
-//*关闭redis连接
+// *关闭redis连接
 func (d *Dao) Close() error {
 	return d.redis.Close()
 }
 
-//*检查redis的可用性
+// *检查redis的可用性
 func (d *Dao) Ping(c context.Context) error {
 	return d.pingRedis(c)
 }

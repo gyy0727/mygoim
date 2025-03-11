@@ -38,7 +38,7 @@ func Init() (err error) {
 		return err
 	}
 
-	// 初始化 etcd 客户端
+	//*初始化 etcd 客户端
 	etcdClient, err := clientv3.New(clientv3.Config{
 		Endpoints:   Conf.Discovery.Endpoints,
 		DialTimeout: Conf.Discovery.DialTimeout,
@@ -50,8 +50,8 @@ func Init() (err error) {
 	}
 	defer etcdClient.Close()
 
-	// 将 etcd 客户端保存到全局变量或结构体中，供后续使用
-	// 例如：Conf.EtcdClient = etcdClient
+	//*将 etcd 客户端保存到全局变量或结构体中，供后续使用
+	//*例如：Conf.EtcdClient = etcdClient
 
 	return nil
 }

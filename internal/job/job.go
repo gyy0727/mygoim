@@ -14,7 +14,7 @@ import (
 	log "github.com/golang/glog"
 )
 
-// Job is push job.
+//*Job is push job.
 type Job struct {
 	c            *conf.Config
 	consumer     *cluster.Consumer

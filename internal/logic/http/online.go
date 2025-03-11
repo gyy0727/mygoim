@@ -2,10 +2,10 @@ package http
 
 import (
 	"context"
-
 	"github.com/gin-gonic/gin"
 )
 
+// *根据 type 和 limit 参数，获取在线用户排名
 func (s *Server) onlineTop(c *gin.Context) {
 	var arg struct {
 		Type  string `form:"type" binding:"required"`
