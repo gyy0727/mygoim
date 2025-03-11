@@ -43,15 +43,15 @@ func newKafkaPub(c *conf.Kafka) kafka.SyncProducer {
 // *新建一个redis客户端
 func newRedis(c *conf.Redis) *redis.Pool {
 	return &redis.Pool{
-		MaxIdle:     c.Idle,
-		MaxActive:   c.Active,
-		IdleTimeout: time.Duration(c.IdleTimeout),
+		MaxIdle:     c.Idle,                       //*最大空闲连接数
+		MaxActive:   c.Active,                     //*最大活跃连接数
+		IdleTimeout: time.Duration(c.IdleTimeout), //*空闲连接超时时间
 		Dial: func() (redis.Conn, error) {
 			conn, err := redis.Dial(c.Network, c.Addr,
-				redis.DialConnectTimeout(time.Duration(c.DialTimeout)),
-				redis.DialReadTimeout(time.Duration(c.ReadTimeout)),
-				redis.DialWriteTimeout(time.Duration(c.WriteTimeout)),
-				redis.DialPassword(c.Auth),
+				redis.DialConnectTimeout(time.Duration(c.DialTimeout)), //*设置连接超时时间
+				redis.DialReadTimeout(time.Duration(c.ReadTimeout)),    //*设置读取超时时间
+				redis.DialWriteTimeout(time.Duration(c.WriteTimeout)),  //*设置写入超时时间
+				redis.DialPassword(c.Auth),                             //*设置 Redis 认证密码
 			)
 			if err != nil {
 				return nil, err
