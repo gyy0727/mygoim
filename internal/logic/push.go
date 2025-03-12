@@ -2,13 +2,11 @@ package logic
 
 import (
 	"context"
-
 	"github.com/gyy0727/mygoim/internal/logic/model"
-
 	log "github.com/golang/glog"
 )
 
-//*根据用户标识（keys）推送消息到对应的服务器
+//*推送消息给批量用户
 func (l *Logic) PushKeys(c context.Context, op int32, keys []string, msg []byte) (err error) {
 	servers, err := l.dao.ServersByKeys(c, keys)
 	if err != nil {

@@ -27,7 +27,7 @@ func New(c *conf.Config) *Dao {
 	return d
 }
 
-// *新建一个kafka客户端
+// *新建一个kafka客户端,生产者
 func newKafkaPub(c *conf.Kafka) kafka.SyncProducer {
 	kc := kafka.NewConfig()
 	kc.Producer.RequiredAcks = kafka.WaitForAll //*这意味着生产者会等待所有副本（包括 Leader 和所有 Follower）都确认消息已写入后，才认为消息发送成功

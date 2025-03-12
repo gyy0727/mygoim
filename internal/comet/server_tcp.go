@@ -250,7 +250,7 @@ func (s *Server) dispatchTCP(conn *net.TCPConn, wr *bufio.Writer, wp *bytes.Pool
 			finish = true
 			goto failed
 		case protocol.ProtoReady:
-			// fetch message from svrbox(client send)
+			
 			for {
 				if p, err = ch.CliProto.Get(); err != nil {
 					break
