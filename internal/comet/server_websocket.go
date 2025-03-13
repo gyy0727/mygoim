@@ -33,7 +33,6 @@ func InitWebsocket(server *Server, addrs []string, accept int) (err error) {
 			return
 		}
 		log.Infof("start ws listen: %s", bind)
-		// split N core accept
 		for i := 0; i < accept; i++ {
 			//*给每个监听地址分配多个accept协程
 			go acceptWebsocket(server, listener)
@@ -143,7 +142,7 @@ func serveWebsocket(s *Server, conn net.Conn, r int) {
 	s.ServeWebsocket(conn, rp, wp, tr)
 }
 
-// ServeWebsocket serve a websocket connection.
+
 func (s *Server) ServeWebsocket(conn net.Conn, rp, wp *bytes.Pool, tr *xtime.Timer) {
 	var (
 		err     error
@@ -162,11 +161,11 @@ func (s *Server) ServeWebsocket(conn net.Conn, rp, wp *bytes.Pool, tr *xtime.Tim
 		ws      *websocket.Conn // websocket
 		req     *websocket.Request
 	)
-	// reader
+
 	ch.Reader.ResetBuffer(conn, rb.Bytes())
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	// handshake
+	
 	step := 0
 	trd = tr.Add(time.Duration(s.c.Protocol.HandshakeTimeout), func() {
 		_ = conn.SetDeadline(time.Now().Add(time.Millisecond * 100))
@@ -185,7 +184,7 @@ func (s *Server) ServeWebsocket(conn net.Conn, rp, wp *bytes.Pool, tr *xtime.Tim
 		}
 		return
 	}
-	// writer
+
 	wb := wp.Get()
 	ch.Writer.ResetBuffer(conn, wb.Bytes())
 	step = 2
@@ -199,7 +198,7 @@ func (s *Server) ServeWebsocket(conn net.Conn, rp, wp *bytes.Pool, tr *xtime.Tim
 		}
 		return
 	}
-	// must not setadv, only used in auth
+	
 	step = 3
 	if p, err = ch.CliProto.Set(); err == nil {
 		if ch.Mid, ch.Key, rid, accepts, hb, err = s.authWebsocket(ctx, ws, p, req.Header.Get("Cookie")); err == nil {
@@ -228,7 +227,7 @@ func (s *Server) ServeWebsocket(conn net.Conn, rp, wp *bytes.Pool, tr *xtime.Tim
 	if white {
 		whitelist.Printf("key: %s[%s] auth\n", ch.Key, rid)
 	}
-	// handshake ok start dispatch goroutine
+
 	step = 5
 	go s.dispatchWebsocket(ws, wp, wb, ch)
 	serverHeartbeat := s.RandServerHearbeat()
@@ -327,7 +326,7 @@ func (s *Server) dispatchWebsocket(ws *websocket.Conn, wp *bytes.Pool, wb *bytes
 			finish = true
 			goto failed
 		case protocol.ProtoReady:
-			// fetch message from svrbox(client send)
+	
 			for {
 				if p, err = ch.CliProto.Get(); err != nil {
 					break
@@ -350,7 +349,7 @@ func (s *Server) dispatchWebsocket(ws *websocket.Conn, wp *bytes.Pool, wb *bytes
 				if white {
 					whitelist.Printf("key: %s write client proto%v\n", ch.Key, p)
 				}
-				p.Body = nil // avoid memory leak
+				p.Body = nil
 				ch.CliProto.GetAdv()
 			}
 		default:
@@ -370,7 +369,6 @@ func (s *Server) dispatchWebsocket(ws *websocket.Conn, wp *bytes.Pool, wb *bytes
 		if white {
 			whitelist.Printf("key: %s start flush \n", ch.Key)
 		}
-		// only hungry flush response
 		if err = ws.Flush(); err != nil {
 			break
 		}
@@ -387,7 +385,7 @@ failed:
 	}
 	ws.Close()
 	wp.Put(wb)
-	// must ensure all channel message discard, for reader won't blocking Signal
+
 	for !finish {
 		finish = (ch.Ready() == protocol.ProtoFinish)
 	}
@@ -396,7 +394,7 @@ failed:
 	}
 }
 
-// auth for goim handshake with client, use rsa & aes.
+
 func (s *Server) authWebsocket(ctx context.Context, ws *websocket.Conn, p *protocol.Proto, cookie string) (mid int64, key, rid string, accepts []int32, hb time.Duration, err error) {
 	for {
 		if err = p.ReadWebsocket(ws); err != nil {

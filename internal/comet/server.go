@@ -121,6 +121,7 @@ func (s *Server) onlineproc() {
 				roomCount[roomID] += count
 			}
 		}
+		//*将在线人数存储到redis中
 		if allRoomsCount, err = s.RenewOnline(context.Background(), s.serverID, roomCount); err != nil {
 			time.Sleep(time.Second)
 			continue
