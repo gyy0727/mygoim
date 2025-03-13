@@ -63,7 +63,7 @@ func (r *Ring) GetAdv() {
 	}
 }
 
-// *用于向环形缓冲区（Ring）中西二一个 protocol.Proto 消息
+// *用于向环形缓冲区（Ring）中写入一个 protocol.Proto 消息
 func (r *Ring) Set() (proto *protocol.Proto, err error) {
 	//*已满
 	if r.wp-r.rp >= r.num {

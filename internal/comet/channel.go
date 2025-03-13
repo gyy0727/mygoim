@@ -3,10 +3,9 @@ package comet
 import (
 	"sync"
 
+	"github.com/gyy0727/mygoim/api/protocol"
 	"github.com/gyy0727/mygoim/internal/comet/errors"
 	"github.com/gyy0727/mygoim/pkg/bufio"
-
-	"github.com/gyy0727/mygoim/api/protocol"
 )
 
 type Channel struct {
@@ -62,7 +61,7 @@ func (c *Channel) NeedPush(op int32) bool {
 	return false
 }
 
-//*用于将消息推送到 Channel 的信号通道 (signal)
+// *用于将消息推送到 Channel 的信号通道 (signal)
 func (c *Channel) Push(p *protocol.Proto) (err error) {
 	select {
 	case c.signal <- p:
@@ -72,18 +71,17 @@ func (c *Channel) Push(p *protocol.Proto) (err error) {
 	return
 }
 
-///*用于从信号通道 (signal) 中读取消息
+// /*用于从信号通道 (signal) 中读取消息
 func (c *Channel) Ready() *protocol.Proto {
 	return <-c.signal
 }
 
-
-//*用于向信号通道 (signal) 发送 ProtoReady 信号，通知 Channel 有新的消息需要处理
+// *用于向信号通道 (signal) 发送 ProtoReady 信号，通知 Channel 有新的消息需要处理
 func (c *Channel) Signal() {
 	c.signal <- protocol.ProtoReady
 }
 
-//*用于向信号通道 (signal) 发送 ProtoFinish 信号，通知 Channel 关闭
+// *用于向信号通道 (signal) 发送 ProtoFinish 信号，通知 Channel 关闭
 func (c *Channel) Close() {
 	c.signal <- protocol.ProtoFinish
 }

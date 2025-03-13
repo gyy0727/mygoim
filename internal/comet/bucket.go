@@ -3,7 +3,6 @@ package comet
 import (
 	"sync"
 	"sync/atomic"
-
 	pb "github.com/gyy0727/mygoim/api/comet"
 	"github.com/gyy0727/mygoim/api/protocol"
 	"github.com/gyy0727/mygoim/internal/comet/conf"
