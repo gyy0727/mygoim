@@ -5,6 +5,7 @@ import (
 
 	"github.com/gyy0727/mygoim/api/protocol"
 	"github.com/gyy0727/mygoim/internal/comet/errors"
+	"go.uber.org/zap"
 )
 
 type Room struct {
@@ -17,6 +18,7 @@ type Room struct {
 }
 
 func NewRoom(id string) (r *Room) {
+	logger.Info("NewRoom,新建房间", zap.String("id", id))
 	r = new(Room)
 	r.ID = id
 	r.drop = false
@@ -42,10 +44,11 @@ func (r *Room) Put(ch *Channel) (err error) {
 		err = errors.ErrRoomDroped
 	}
 	r.rLock.Unlock()
+	logger.Info("房间添加通道", zap.String("房间id", r.ID), zap.Int32("房间在线人数", r.Online))
 	return
 }
 
-// *删除通道,返回房间是否还存在活跃用户 
+// *删除通道,返回房间是否还存在活跃用户
 func (r *Room) Del(ch *Channel) bool {
 	//*将传入的通道的前后项通过双向链表相连
 	r.rLock.Lock()
@@ -63,32 +66,35 @@ func (r *Room) Del(ch *Channel) bool {
 	r.Online--
 	r.drop = r.Online == 0
 	r.rLock.Unlock()
+	logger.Info("房间删除通道", zap.String("房间id", r.ID), zap.Int32("房间在线人数", r.Online))
 	return r.drop
 }
 
-//*广播消息 
+// *广播消息
 func (r *Room) Push(p *protocol.Proto) {
 	r.rLock.RLock()
 	for ch := r.next; ch != nil; ch = ch.Next {
 		_ = ch.Push(p)
 	}
+	logger.Info("房间广播消息", zap.String("房间id", r.ID), zap.Int32("房间在线人数", r.Online))
 	r.rLock.RUnlock()
 }
 
-//*用于关闭房间中的所有 Channel
+// *用于关闭房间中的所有 Channel
 func (r *Room) Close() {
 	r.rLock.RLock()
 	for ch := r.next; ch != nil; ch = ch.Next {
 		ch.Close()
 	}
+	logger.Info("房间关闭所有channel", zap.String("房间id", r.ID), zap.Int32("房间在线人数", r.Online))
 	r.rLock.RUnlock()
 }
 
-
-//*用于获取房间的在线用户数
+// *用于获取房间的在线用户数
 func (r *Room) OnlineNum() int32 {
 	if r.AllOnline > 0 {
 		return r.AllOnline
 	}
+	logger.Info("房间获取在线人数", zap.String("房间id", r.ID), zap.Int32("房间在线人数", r.Online))
 	return r.Online
 }

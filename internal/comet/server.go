@@ -4,7 +4,6 @@ import (
 	"context"
 	"math/rand"
 	"time"
-
 	"github.com/gyy0727/mygoim/api/logic"
 	"github.com/gyy0727/mygoim/internal/comet/conf"
 	"github.com/zhenjl/cityhash"
@@ -52,6 +51,7 @@ func newLogicClient(c *conf.RPCClient) logic.LogicClient {
 	return logic.NewLogicClient(conn)
 }
 
+//*comet-logic服务器
 type Server struct {
 	c         *conf.Config      //*配置文件对象
 	round     *Round            //*连接管理轮询器（如连接池管理）
@@ -74,6 +74,7 @@ func NewServer(c *conf.Config) *Server {
 		s.buckets[i] = NewBucket(c.Bucket)
 	}
 	s.serverID = c.Env.Host
+	logger.Info("初始化server")
 	go s.onlineproc()
 	return s
 }
@@ -108,6 +109,7 @@ func (s *Server) Close() (err error) {
 }
 
 func (s *Server) onlineproc() {
+	logger.Info("onlineproc执行中")
 	for {
 		var (
 			allRoomsCount map[string]int32

@@ -3,9 +3,11 @@ package comet
 import (
 	"sync"
 	"sync/atomic"
+
 	pb "github.com/gyy0727/mygoim/api/comet"
 	"github.com/gyy0727/mygoim/api/protocol"
 	"github.com/gyy0727/mygoim/internal/comet/conf"
+	"go.uber.org/zap"
 )
 
 type Bucket struct {
@@ -31,16 +33,19 @@ func NewBucket(c *conf.Bucket) (b *Bucket) {
 		b.routines[i] = c
 		go b.roomproc(c)
 	}
+	logger.Info("创建Bucket")
 	return
 }
 
 // *bucket包含的channel数量
 func (b *Bucket) ChannelCount() int {
+	logger.Info("channel数量", zap.Int("channel数量", len(b.chs)))
 	return len(b.chs)
 }
 
 // *返回房间数量,包含所有已注册房间（无论是否在线）
 func (b *Bucket) RoomCount() int {
+	logger.Info("房间数量", zap.Int("房间数量", len(b.rooms)))
 	return len(b.rooms)
 }
 
@@ -61,7 +66,7 @@ func (b *Bucket) RoomsCount() (res map[string]int32) {
 	return
 }
 
-// *将channel迁移到新房间 
+// *将channel迁移到新房间
 func (b *Bucket) ChangeRoom(nrid string, ch *Channel) (err error) {
 	var (
 		nroom *Room
@@ -70,16 +75,16 @@ func (b *Bucket) ChangeRoom(nrid string, ch *Channel) (err error) {
 	)
 	//*删除房间
 	if nrid == "" {
-		//*将通道从原来的房间移除 
+		//*将通道从原来的房间移除
 		if oroom != nil && oroom.Del(ch) {
-			//*房间无在线人数 
+			//*房间无在线人数
 			b.DelRoom(oroom)
 		}
 		ch.Room = nil
 		return
 	}
 	b.cLock.Lock()
-	//*检查nrid对应的房间是否存在  
+	//*检查nrid对应的房间是否存在
 	if nroom, ok = b.rooms[nrid]; !ok {
 		nroom = NewRoom(nrid)
 		b.rooms[nrid] = nroom
@@ -88,15 +93,16 @@ func (b *Bucket) ChangeRoom(nrid string, ch *Channel) (err error) {
 	if oroom != nil && oroom.Del(ch) {
 		b.DelRoom(oroom)
 	}
-	//*添加到新房间 
+	//*添加到新房间
 	if err = nroom.Put(ch); err != nil {
 		return
 	}
 	ch.Room = nroom
+	logger.Info("channel迁移房间", zap.String("channel", ch.Key))
 	return
 }
 
-//*添加连接 
+// *添加连接
 func (b *Bucket) Put(rid string, ch *Channel) (err error) {
 	var (
 		room *Room
@@ -110,26 +116,27 @@ func (b *Bucket) Put(rid string, ch *Channel) (err error) {
 	//*将新通道存入Bucket的chs映射
 	b.chs[ch.Key] = ch
 	if rid != "" {
-		//*rid对应的房间不存在 
+		//*rid对应的房间不存在
 		if room, ok = b.rooms[rid]; !ok {
-			//*创建房间 
+			//*创建房间
 			room = NewRoom(rid)
 			b.rooms[rid] = room
 		}
-		//*关联通道 
+		//*关联通道
 		ch.Room = room
 	}
-	//*添加ip对应的链接计数 
+	//*添加ip对应的链接计数
 	b.ipCnts[ch.IP]++
 	b.cLock.Unlock()
 	if room != nil {
-		//*将通道添加到房间中 
+		//*将通道添加到房间中
 		err = room.Put(ch)
 	}
+	logger.Info("bucket添加channel", zap.String("channel", ch.Key))
 	return
 }
 
-// *删除key对应的通道
+// *删除key对应的通道,从chs[]和dch对应的room中删除
 func (b *Bucket) Del(dch *Channel) {
 	room := dch.Room
 	b.cLock.Lock()
@@ -149,12 +156,13 @@ func (b *Bucket) Del(dch *Channel) {
 	}
 	b.cLock.Unlock()
 	if room != nil && room.Del(dch) {
-		//*房间已经没有活跃用户了,移除房间 
+		//*房间已经没有活跃用户了,移除房间
 		b.DelRoom(room)
 	}
+	logger.Info("bucket删除channel", zap.String("channel", dch.Key))
 }
 
-// *返回key对应的通道
+// *返回key对应的通道,从chs[]中获取
 func (b *Bucket) Channel(key string) (ch *Channel) {
 	b.cLock.RLock()
 	ch = b.chs[key]
@@ -162,8 +170,9 @@ func (b *Bucket) Channel(key string) (ch *Channel) {
 	return
 }
 
-// *广播消息
+// *广播消息到bucket的每个channel中
 func (b *Bucket) Broadcast(p *protocol.Proto, op int32) {
+	logger.Info("bucket广播消息", zap.Int32("op", op))
 	var ch *Channel
 	b.cLock.RLock()
 	for _, ch = range b.chs {
@@ -194,6 +203,7 @@ func (b *Bucket) DelRoom(room *Room) {
 // *实现房间级广播请求的并行化分发
 func (b *Bucket) BroadcastRoom(arg *pb.BroadcastRoomReq) {
 	num := atomic.AddUint64(&b.routinesNum, 1) % b.c.RoutineAmount
+
 	b.routines[num] <- arg
 }
 
@@ -228,8 +238,8 @@ func (b *Bucket) IPCount() (res map[string]struct{}) {
 	return
 }
 
-//*实现房间人数统计更新
-//*roomCountMap通常从外部存储（如Redis集群）获取全局统计
+// *实现房间人数统计更新
+// *roomCountMap通常从外部存储（如Redis集群）获取全局统计
 func (b *Bucket) UpRoomsCount(roomCountMap map[string]int32) {
 	var (
 		roomID string
@@ -242,11 +252,12 @@ func (b *Bucket) UpRoomsCount(roomCountMap map[string]int32) {
 	b.cLock.RUnlock()
 }
 
-// *
+// *协程函数,不停从通道c取出消息然后推送到房间中
 func (b *Bucket) roomproc(c chan *pb.BroadcastRoomReq) {
 	for {
 		arg := <-c
 		if room := b.Room(arg.RoomID); room != nil {
+			logger.Info("bucket协程函数", zap.String("房间id", arg.RoomID), zap.Int32("op", arg.Proto.Op))
 			room.Push(arg.Proto)
 		}
 	}
