@@ -58,6 +58,6 @@ func (l *Logic) nodeAddrs(c context.Context, clientIP string) (domains, addrs []
 
 //*该方法根据客户端 IP 获取地理位置信息
 func (l *Logic) location(c context.Context, clientIP string) (province string, err error) {
-	// province: config mapping
+
 	return
 }

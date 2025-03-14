@@ -2,11 +2,10 @@ package comet
 
 import (
 	"context"
-
+	"time"
 	"github.com/gyy0727/mygoim/api/logic"
 	"github.com/gyy0727/mygoim/api/protocol"
 	"github.com/gyy0727/mygoim/pkg/strings"
-	"time"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/encoding/gzip"
@@ -58,13 +57,13 @@ func (s *Server) RenewOnline(ctx context.Context, serverID string, roomCount map
 	return reply.AllRoomCount, nil
 }
 
-//*接受一个消息 
+// *接受一个消息
 func (s *Server) Receive(ctx context.Context, mid int64, p *protocol.Proto) (err error) {
 	_, err = s.rpcClient.Receive(ctx, &logic.ReceiveReq{Mid: mid, Proto: p})
 	return
 }
 
-//*根据协议的操作码执行不同的操作 
+// *根据协议的操作码执行不同的操作
 func (s *Server) Operate(ctx context.Context, p *protocol.Proto, ch *Channel, b *Bucket) error {
 	switch p.Op {
 	case protocol.OpChangeRoom:

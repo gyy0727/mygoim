@@ -18,8 +18,8 @@ type Channel struct {
 	Next     *Channel             //*双向链表中的下一个 Channel
 	Prev     *Channel             //*双向链表中的上一个 Channel
 	Mid      int64                //*用户 ID
-	Key      string               //*所属bucket唯一标识
-	IP       string               //*客户端 IP 地址
+	Key      string               //*当前链接的唯一标识
+	IP       string               //*客户端IP地址
 	watchOps map[int32]struct{}   //*监听的操作集合
 	mutex    sync.RWMutex         //*读写锁，用于保护 watchOps 的并发访问
 }

@@ -2,10 +2,12 @@ package conf
 
 import (
 	"flag"
+	"fmt"
 	"os"
 	"strconv"
 	"strings"
 	"time"
+
 	//*用于解析 TOML 配置文件
 	"github.com/BurntSushi/toml"
 	xtime "github.com/gyy0727/mygoim/pkg/time"
@@ -203,4 +205,124 @@ type Bucket struct {
 type Whitelist struct {
 	Whitelist []int64 // *白名单用户ID列表
 	WhiteLog  string  // *白名单日志文件路径
+}
+
+// *=============================================
+func (c *Config) String() string {
+	return fmt.Sprintf(`Config{
+    Debug: %v,
+    Env: %s,
+    Etcd: %s,
+    TCP: %s,
+    Websocket: %s,
+    Protocol: %s,
+    Bucket: %s,
+    RPCClient: %s,
+    RPCServer: %s,
+    Whitelist: %s
+}`,
+		c.Debug, c.Env.String(), c.Etcd.String(), c.TCP.String(), c.Websocket.String(), c.Protocol.String(), c.Bucket.String(), c.RPCClient.String(), c.RPCServer.String(), c.Whitelist.String())
+}
+
+func (e *EtcdConfig) String() string {
+	return fmt.Sprintf(`EtcdConfig{
+    Endpoints: %v,
+    DialTimeout: %v,
+    Username: %s,
+    Password: %s,
+    Prefix: %s
+}`,
+		e.Endpoints, e.DialTimeout, e.Username, e.Password, e.Prefix)
+}
+
+func (e *Env) String() string {
+	return fmt.Sprintf(`Env{
+    Region: %s,
+    Zone: %s,
+    DeployEnv: %s,
+    Host: %s,
+    Weight: %d,
+    Offline: %v,
+    Addrs: %v
+}`,
+		e.Region, e.Zone, e.DeployEnv, e.Host, e.Weight, e.Offline, e.Addrs)
+}
+
+func (r *RPCClient) String() string {
+	return fmt.Sprintf(`RPCClient{
+    Dial: %v,
+    Timeout: %v
+}`,
+		r.Dial, r.Timeout)
+}
+
+func (r *RPCServer) String() string {
+	return fmt.Sprintf(`RPCServer{
+    Network: %s,
+    Addr: %s,
+    Timeout: %v,
+    IdleTimeout: %v,
+    MaxLifeTime: %v,
+    ForceCloseWait: %v,
+    KeepAliveInterval: %v,
+    KeepAliveTimeout: %v
+}`,
+		r.Network, r.Addr, r.Timeout, r.IdleTimeout, r.MaxLifeTime, r.ForceCloseWait, r.KeepAliveInterval, r.KeepAliveTimeout)
+}
+
+func (t *TCP) String() string {
+	return fmt.Sprintf(`TCP{
+    Bind: %v,
+    Sndbuf: %d,
+    Rcvbuf: %d,
+    KeepAlive: %v,
+    Reader: %d,
+    ReadBuf: %d,
+    ReadBufSize: %d,
+    Writer: %d,
+    WriteBuf: %d,
+    WriteBufSize: %d
+}`,
+		t.Bind, t.Sndbuf, t.Rcvbuf, t.KeepAlive, t.Reader, t.ReadBuf, t.ReadBufSize, t.Writer, t.WriteBuf, t.WriteBufSize)
+}
+
+func (w *Websocket) String() string {
+	return fmt.Sprintf(`Websocket{
+    Bind: %v,
+    TLSOpen: %v,
+    TLSBind: %v,
+    CertFile: %s,
+    PrivateFile: %s
+}`,
+		w.Bind, w.TLSOpen, w.TLSBind, w.CertFile, w.PrivateFile)
+}
+
+func (p *Protocol) String() string {
+	return fmt.Sprintf(`Protocol{
+    Timer: %d,
+    TimerSize: %d,
+    SvrProto: %d,
+    CliProto: %d,
+    HandshakeTimeout: %v
+}`,
+		p.Timer, p.TimerSize, p.SvrProto, p.CliProto, p.HandshakeTimeout)
+}
+
+func (b *Bucket) String() string {
+	return fmt.Sprintf(`Bucket{
+    Size: %d,
+    Channel: %d,
+    Room: %d,
+    RoutineAmount: %d,
+    RoutineSize: %d
+}`,
+		b.Size, b.Channel, b.Room, b.RoutineAmount, b.RoutineSize)
+}
+
+func (w *Whitelist) String() string {
+	return fmt.Sprintf(`Whitelist{
+    Whitelist: %v,
+    WhiteLog: %s
+}`,
+		w.Whitelist, w.WhiteLog)
 }

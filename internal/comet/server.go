@@ -26,9 +26,11 @@ const (
 
 // *新建一个rpc客户端
 func newLogicClient(c *conf.RPCClient) logic.LogicClient {
+	//*TODO 
+	return nil
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(c.Dial))
 	defer cancel()
-	conn, err := grpc.DialContext(ctx, "discovery://default/goim.logic",
+	conn, err := grpc.DialContext(ctx, "etcd:///goim.logic",
 		[]grpc.DialOption{
 			grpc.WithInsecure(),
 			grpc.WithInitialWindowSize(grpcInitialWindowSize),
@@ -54,9 +56,9 @@ func newLogicClient(c *conf.RPCClient) logic.LogicClient {
 //*comet-logic服务器
 type Server struct {
 	c         *conf.Config      //*配置文件对象
-	round     *Round            //*连接管理轮询器（如连接池管理）
+	round     *Round            //*池管理器（如连接池管理）
 	buckets   []*Bucket         //*分桶存储结构（用于负载均衡或资源分区）
-	bucketIdx uint32            //*当前分桶索引
+	bucketIdx uint32            //*当前服务器包含的bucket的数量
 	serverID  string            //*服务实例唯一标识
 	rpcClient logic.LogicClient //*gRPC客户端接口
 }
@@ -70,11 +72,12 @@ func NewServer(c *conf.Config) *Server {
 	}
 	s.buckets = make([]*Bucket, c.Bucket.Size)
 	s.bucketIdx = uint32(c.Bucket.Size)
+	
 	for i := 0; i < c.Bucket.Size; i++ {
 		s.buckets[i] = NewBucket(c.Bucket)
 	}
-	s.serverID = c.Env.Host
-	logger.Info("初始化server")
+	s.serverID = c.Env.Host //*当前主机的主机名
+	logger.Info("初始化server",zap.Int("bucket size",c.Bucket.Size))
 	go s.onlineproc()
 	return s
 }
@@ -108,6 +111,7 @@ func (s *Server) Close() (err error) {
 	return
 }
 
+//*server的主函数, 用于处理在线人数的更新
 func (s *Server) onlineproc() {
 	logger.Info("onlineproc执行中")
 	for {

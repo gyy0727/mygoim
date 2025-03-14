@@ -13,6 +13,7 @@ import (
 	"github.com/gyy0727/mygoim/pkg/bufio"
 	"github.com/gyy0727/mygoim/pkg/bytes"
 	xtime "github.com/gyy0727/mygoim/pkg/time"
+	"go.uber.org/zap"
 )
 
 const (
@@ -29,15 +30,23 @@ func InitTCP(server *Server, addrs []string, accept int) (err error) {
 	for _, bind = range addrs {
 		//*解析地址，返回 *net.TCPAddr
 		if addr, err = net.ResolveTCPAddr("tcp", bind); err != nil {
-			log.Errorf("net.ResolveTCPAddr(tcp, %s) error(%v)", bind, err)
+			logger.Error("Failed to resolve TCP address",
+				zap.String("bind", bind),
+				zap.Error(err),
+			)
 			return
 		}
 		//*在解析后的地址上创建 TCP 监听器
 		if listener, err = net.ListenTCP("tcp", addr); err != nil {
-			log.Errorf("net.ListenTCP(tcp, %s) error(%v)", bind, err)
+			logger.Error("Failed to listen on TCP address",
+				zap.String("bind", bind),
+				zap.Error(err),
+			)
 			return
 		}
-		log.Infof("start tcp listen: %s", bind)
+		logger.Info("Start TCP listen",
+			zap.String("bind", bind),
+		)
 		//*accept每个地址启动的 goroutine 数量，用于并发处理客户端连接
 		for i := 0; i < accept; i++ {
 			go acceptTCP(server, listener)
@@ -55,22 +64,32 @@ func acceptTCP(server *Server, lis *net.TCPListener) {
 	)
 	for {
 		if conn, err = lis.AcceptTCP(); err != nil {
-
-			log.Errorf("listener.Accept(\"%s\") error(%v)", lis.Addr().String(), err)
+			logger.Error("Failed to accept connection",
+				zap.String("address", lis.Addr().String()),
+				zap.Error(err),
+			)
 			return
 		}
 		if err = conn.SetKeepAlive(server.c.TCP.KeepAlive); err != nil {
-			log.Errorf("conn.SetKeepAlive() error(%v)", err)
+			logger.Error("Failed to set keep-alive",
+				zap.Error(err),
+			)
 			return
 		}
+		//*设置 TCP 连接的读写缓冲区大小
 		if err = conn.SetReadBuffer(server.c.TCP.Rcvbuf); err != nil {
-			log.Errorf("conn.SetReadBuffer() error(%v)", err)
+			logger.Error("Failed to set read buffer",
+				zap.Error(err),
+			)
 			return
 		}
 		if err = conn.SetWriteBuffer(server.c.TCP.Sndbuf); err != nil {
-			log.Errorf("conn.SetWriteBuffer() error(%v)", err)
+			logger.Error("conn.SetWriteBuffer() error",
+				zap.Error(err),
+			)
 			return
 		}
+		//*开启新协程处理连接
 		go serveTCP(server, conn, r)
 		if r++; r == maxInt {
 			r = 0
@@ -88,7 +107,10 @@ func serveTCP(s *Server, conn *net.TCPConn, r int) {
 		rAddr = conn.RemoteAddr().String() //*远端地址
 	)
 	if conf.Conf.Debug {
-		log.Infof("start tcp serve \"%s\" with \"%s\"", lAddr, rAddr)
+		logger.Info("start tcp serve",
+			zap.String("local_address", lAddr),
+			zap.String("remote_address", rAddr),
+		)
 	}
 	s.ServeTCP(conn, rp, wp, tr)
 }
@@ -119,19 +141,28 @@ func (s *Server) ServeTCP(conn *net.TCPConn, rp, wp *bytes.Pool, tr *xtime.Timer
 	step := 0
 	trd = tr.Add(time.Duration(s.c.Protocol.HandshakeTimeout), func() {
 		conn.Close()
-		log.Errorf("key: %s remoteIP: %s step: %d tcp handshake timeout", ch.Key, conn.RemoteAddr().String(), step)
+		logger.Error("tcp handshake timeout",
+			zap.String("key", ch.Key),
+			zap.String("remoteIP", conn.RemoteAddr().String()),
+			zap.Int("step", step),
+		)
 	})
 	//*解析客户端地址，获取 IP
 	ch.IP, _, _ = net.SplitHostPort(conn.RemoteAddr().String())
 	//*进行客户端认证，并初始化客户端连接
 	step = 1
+	//*p用于写一个消息到协议缓冲区
 	if p, err = ch.CliProto.Set(); err == nil {
 		if ch.Mid, ch.Key, rid, accepts, hb, err = s.authTCP(ctx, rr, wr, p); err == nil {
 			ch.Watch(accepts...)
 			b = s.Bucket(ch.Key)
 			err = b.Put(rid, ch)
 			if conf.Conf.Debug {
-				log.Infof("tcp connnected key:%s mid:%d proto:%+v", ch.Key, ch.Mid, p)
+				logger.Info("tcp connected",
+					zap.String("key", ch.Key),
+					zap.Int64("mid", ch.Mid),
+					zap.Any("proto", p),
+				)
 			}
 		}
 	}
@@ -141,7 +172,10 @@ func (s *Server) ServeTCP(conn *net.TCPConn, rp, wp *bytes.Pool, tr *xtime.Timer
 		rp.Put(rb)
 		wp.Put(wb)
 		tr.Del(trd)
-		log.Errorf("key: %s handshake failed error(%v)", ch.Key, err)
+		logger.Error("handshake failed",
+			zap.String("key", ch.Key),
+			zap.Error(err),
+		)
 		return
 	}
 	trd.Key = ch.Key
@@ -151,7 +185,6 @@ func (s *Server) ServeTCP(conn *net.TCPConn, rp, wp *bytes.Pool, tr *xtime.Timer
 		whitelist.Printf("key: %s[%s] auth\n", ch.Key, rid)
 	}
 	step = 3
-	// hanshake ok start dispatch goroutine
 	go s.dispatchTCP(conn, wr, wp, wb, ch)
 	serverHeartbeat := s.RandServerHearbeat()
 	for {
@@ -173,12 +206,16 @@ func (s *Server) ServeTCP(conn *net.TCPConn, rp, wp *bytes.Pool, tr *xtime.Timer
 			p.Body = nil
 
 			if now := time.Now(); now.Sub(lastHb) > serverHeartbeat {
+				//*收到心跳消息,给予响应
 				if err1 := s.Heartbeat(ctx, ch.Mid, ch.Key); err1 == nil {
 					lastHb = now
 				}
 			}
 			if conf.Conf.Debug {
-				log.Infof("tcp heartbeat receive key:%s, mid:%d", ch.Key, ch.Mid)
+				logger.Info("tcp heartbeat receive",
+					zap.String("key", ch.Key),
+					zap.Int64("mid", ch.Mid),
+				)
 			}
 			step++
 		} else {
@@ -189,6 +226,7 @@ func (s *Server) ServeTCP(conn *net.TCPConn, rp, wp *bytes.Pool, tr *xtime.Timer
 		if white {
 			whitelist.Printf("key: %s process proto:%v\n", ch.Key, p)
 		}
+		//*写指针++
 		ch.CliProto.SetAdv()
 		ch.Signal()
 		if white {
@@ -217,7 +255,7 @@ func (s *Server) ServeTCP(conn *net.TCPConn, rp, wp *bytes.Pool, tr *xtime.Timer
 	}
 }
 
-//*分发 TCP 消息，负责将消息写入客户端连接
+// *分发 TCP 消息，负责将消息写入客户端连接
 func (s *Server) dispatchTCP(conn *net.TCPConn, wr *bufio.Writer, wp *bytes.Pool, wb *bytes.Buffer, ch *Channel) {
 	var (
 		err    error
@@ -250,7 +288,7 @@ func (s *Server) dispatchTCP(conn *net.TCPConn, wr *bufio.Writer, wp *bytes.Pool
 			finish = true
 			goto failed
 		case protocol.ProtoReady:
-			
+
 			for {
 				if p, err = ch.CliProto.Get(); err != nil {
 					break
@@ -294,7 +332,7 @@ func (s *Server) dispatchTCP(conn *net.TCPConn, wr *bufio.Writer, wp *bytes.Pool
 		if white {
 			whitelist.Printf("key: %s start flush \n", ch.Key)
 		}
-		// only hungry flush response
+
 		if err = wr.Flush(); err != nil {
 			break
 		}
@@ -311,7 +349,6 @@ failed:
 	}
 	conn.Close()
 	wp.Put(wb)
-	// must ensure all channel message discard, for reader won't blocking Signal
 	for !finish {
 		finish = (ch.Ready() == protocol.ProtoFinish)
 	}
@@ -319,7 +356,6 @@ failed:
 		log.Infof("key: %s dispatch goroutine exit", ch.Key)
 	}
 }
-
 
 func (s *Server) authTCP(ctx context.Context, rr *bufio.Reader, wr *bufio.Writer, p *protocol.Proto) (mid int64, key, rid string, accepts []int32, hb time.Duration, err error) {
 	for {

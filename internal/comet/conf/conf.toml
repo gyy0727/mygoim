@@ -1,0 +1,79 @@
+# 是否开启调试模式
+Debug = true
+
+# 环境相关的配置
+[Env]
+Region = "上海"
+Zone = "zone1"
+DeployEnv = "prod"
+Host = "上海-zone1-server"
+Weight = 20
+Offline = true
+Addrs = ["127.0.0.1:8080"]
+
+# Etcd服务发现配置
+[Etcd]
+Endpoints = ["127.0.0.1:2379"]
+DialTimeout = "5s"
+Username = "admin"
+Password = "password"
+Prefix = "/myapp"
+
+# TCP连接配置
+[TCP]
+Bind = [":8080"]
+Sndbuf = 4096
+Rcvbuf = 4096
+KeepAlive = true
+Reader = 32
+ReadBuf = 1024
+ReadBufSize = 8192
+Writer = 32
+WriteBuf = 1024
+WriteBufSize = 8192
+
+# WebSocket连接配置
+[Websocket]
+Bind = [":8082"]
+TLSOpen = false
+TLSBind = [":3103"]
+CertFile = "/path/to/cert.pem"
+PrivateFile = "/path/to/private.key"
+
+# 协议相关的配置
+[Protocol]
+Timer = 32 #要创建的定时器数量-round
+TimerSize = 2048 #每个定时器可以管理的节点的数量-round
+SvrProto = 10  #协议缓冲区的大小,其实就是用于接受消息的环形缓冲区
+CliProto = 5 #channel用于comet的通信 
+HandshakeTimeout = "8s"
+
+# 连接桶的配置
+[Bucket]
+Size = 32 #server的bucket数量
+Channel = 1024 #每个bucket的channel数量
+Room = 1024 #每个bucket的房间数量
+RoutineAmount = 32 #每个bucket的协程数量
+RoutineSize = 1024 #bucket每个协程的通信通道的大小
+
+# RPC客户端配置
+[RPCClient]
+Dial = "1s" #rpc客户端连接远程rpc服务端的超时时间 
+Timeout = "1s" 
+
+# RPC服务端配置
+[RPCServer]
+Network = "tcp"
+Addr = "0.0.0.0:50051"
+Timeout = "10s"
+IdleTimeout = "60s"
+MaxLifeTime = "3600s"
+ForceCloseWait = "5s"
+KeepAliveInterval = "30s"
+KeepAliveTimeout = "10s"
+
+# 白名单配置
+[Whitelist]
+Whitelist = [1001, 1002, 1003]
+WhiteLog = "/var/log/whitelist.log"
+

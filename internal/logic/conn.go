@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"time"
-
 	log "github.com/golang/glog"
 	"github.com/google/uuid"
 	"github.com/gyy0727/mygoim/api/protocol"

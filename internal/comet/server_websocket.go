@@ -67,7 +67,6 @@ func InitWebsocketWithTLS(server *Server, addrs []string, certFile, privateFile 
 			return
 		}
 		log.Infof("start wss listen: %s", bind)
-		// split N core accept
 		for i := 0; i < accept; i++ {
 			go acceptWebsocketWithTLS(server, listener)
 		}
@@ -128,13 +127,12 @@ func acceptWebsocketWithTLS(server *Server, lis net.Listener) {
 
 func serveWebsocket(s *Server, conn net.Conn, r int) {
 	var (
-		// timer
 		tr = s.round.Timer(r)
 		rp = s.round.Reader(r)
 		wp = s.round.Writer(r)
 	)
 	if conf.Conf.Debug {
-		// ip addr
+		
 		lAddr := conn.LocalAddr().String()
 		rAddr := conn.RemoteAddr().String()
 		log.Infof("start tcp serve \"%s\" with \"%s\"", lAddr, rAddr)
@@ -158,7 +156,7 @@ func (s *Server) ServeWebsocket(conn net.Conn, rp, wp *bytes.Pool, tr *xtime.Tim
 		ch      = NewChannel(s.c.Protocol.CliProto, s.c.Protocol.SvrProto)
 		rr      = &ch.Reader
 		wr      = &ch.Writer
-		ws      *websocket.Conn // websocket
+		ws      *websocket.Conn 
 		req     *websocket.Request
 	)
 
@@ -172,7 +170,7 @@ func (s *Server) ServeWebsocket(conn net.Conn, rp, wp *bytes.Pool, tr *xtime.Tim
 		_ = conn.Close()
 		log.Errorf("key: %s remoteIP: %s step: %d ws handshake timeout", ch.Key, conn.RemoteAddr().String(), step)
 	})
-	// websocket
+
 	ch.IP, _, _ = net.SplitHostPort(conn.RemoteAddr().String())
 	step = 1
 	if req, err = websocket.ReadRequest(rr); err != nil || req.RequestURI != "/sub" {

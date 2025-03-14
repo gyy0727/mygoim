@@ -181,6 +181,9 @@ func (b *Bucket) Broadcast(p *protocol.Proto, op int32) {
 		}
 		_ = ch.Push(p)
 	}
+	// for _, singleRoom := range b.rooms {
+	// 	singleRoom.Push(p)
+	// }
 	b.cLock.RUnlock()
 }
 
@@ -200,7 +203,7 @@ func (b *Bucket) DelRoom(room *Room) {
 	room.Close()
 }
 
-// *实现房间级广播请求的并行化分发
+// *将消息广播到某个房间
 func (b *Bucket) BroadcastRoom(arg *pb.BroadcastRoomReq) {
 	num := atomic.AddUint64(&b.routinesNum, 1) % b.c.RoutineAmount
 
