@@ -61,7 +61,7 @@ func main() {
 	rpcSrv := grpc.New(conf.Conf.RPCServer, srv)
 
 	//* 使用 etcd 进行服务注册
-	etcdEndpoints := []string{"127.0.0.1:2379"} //* etcd 端点，根据实际情况修改，建议将其写入配置文件中
+	etcdEndpoints := []string{"47.115.200.76:2379"} //* etcd 端点，根据实际情况修改，建议将其写入配置文件中
 	etcdCli, err := clientv3.New(clientv3.Config{
 		Endpoints:   etcdEndpoints,
 		DialTimeout: 5 * time.Second,

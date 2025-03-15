@@ -14,12 +14,12 @@ func (builder) Build(target resolver.Target, cc resolver.ClientConn, opts resolv
 	mr := manuResolver{
 		cc:     cc,
 		target: target,
-		r:      eResolver,
+		r:      EResolver,
 	}
 	//*记录解析器
-	mr.r.setManuResolver(target.URL.Host, mr)
+	mr.r.SetManuResolver(target.URL.Host, mr)
 	//*记录需要解析的节点
-	mr.r.setTargetNode(target.URL.Host)
+	mr.r.SetTargetNode(target.URL.Host)
 	return mr, nil
 }
 

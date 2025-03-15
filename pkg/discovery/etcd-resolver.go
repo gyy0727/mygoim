@@ -5,6 +5,7 @@ package discovery
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"strings"
 	"sync"
@@ -16,12 +17,12 @@ import (
 )
 
 const (
-	tickerTime = 10 * time.Second
+	tickerTime = 1 * time.Second //*etcdResolver 定期执行服务节点解析的频率
 )
 
 type etcdResolver struct {
 	//*记录所有创建的解析器，同一个host只创建一个解析器
-	mr    map[string]resolver.Resolver
+	mr map[string]resolver.Resolver
 	//*读写锁
 	mrMux sync.RWMutex
 
@@ -32,12 +33,11 @@ type etcdResolver struct {
 	//*连接 etcd 超时时间
 	dialTimeout time.Duration
 
-	
-	tnsMux        sync.RWMutex
+	tnsMux sync.RWMutex
 	//*需要解析的目标节点
 	targetNodeSet map[string]*Node
-	
-	snsMux       sync.RWMutex
+
+	snsMux sync.RWMutex
 	//*解析到的服务节点， host:addr:*Node
 	serviceNodes map[string]map[string]*Node
 
@@ -46,8 +46,8 @@ type etcdResolver struct {
 	once sync.Once
 }
 
-//*返回name对应的节点信息
-func (e *etcdResolver) getServiceNodes(name string) []*Node {
+// *返回name对应的节点信息
+func (e *etcdResolver) GetServiceNodes(name string) []*Node {
 	e.snsMux.RLock()
 	defer e.snsMux.RUnlock()
 	nodes := make([]*Node, 0)
@@ -58,7 +58,7 @@ func (e *etcdResolver) getServiceNodes(name string) []*Node {
 	return nodes
 }
 
-//*设置解析到的服务节点
+// *将解析到的节点信息添加到ServiceNodes中
 func (e *etcdResolver) setServiceNodes(name string, nodes ...*Node) {
 	e.snsMux.Lock()
 	defer e.snsMux.Unlock()
@@ -73,8 +73,9 @@ func (e *etcdResolver) setServiceNodes(name string, nodes ...*Node) {
 	e.serviceNodes[name] = ns
 }
 
-//*删除服务节点
+// *删除解析完成服务节点
 func (e *etcdResolver) removeServiceNode(name, addr string) {
+	fmt.Println("remove node------------ [%s:%s]", name, addr)
 	e.snsMux.Lock()
 	defer e.snsMux.Unlock()
 	nodes := e.serviceNodes[name]
@@ -84,14 +85,21 @@ func (e *etcdResolver) removeServiceNode(name, addr string) {
 	delete(nodes, addr)
 }
 
-//*设置解析器
-func (e *etcdResolver) setManuResolver(host string, m resolver.Resolver) {
+func (e *etcdResolver) removeServiceNodeWithPrefix(name string) {
+	fmt.Println("remove node------------ [%s]", name)
+	e.snsMux.Lock()
+	defer e.snsMux.Unlock()
+	delete(e.serviceNodes, name)
+}
+
+// *设置host对应的解析器
+func (e *etcdResolver) SetManuResolver(host string, m resolver.Resolver) {
 	e.mrMux.Lock()
 	defer e.mrMux.Unlock()
 	e.mr[host] = m
 }
 
-//*根据host获取解析器
+// *根据host获取解析器
 func (e *etcdResolver) getManuResolver(host string) (resolver.Resolver, bool) {
 	e.mrMux.RLock()
 	defer e.mrMux.RUnlock()
@@ -101,21 +109,22 @@ func (e *etcdResolver) getManuResolver(host string) (resolver.Resolver, bool) {
 	return nil, false
 }
 
-//*设置解析目标节点
-func (e *etcdResolver) setTargetNode(host string) {
+// *设置需要解析的目标节点
+func (e *etcdResolver) SetTargetNode(host string) {
 	e.tnsMux.Lock()
 	e.targetNodeSet[host] = &Node{Name: host}
 	e.tnsMux.Unlock()
 
 	//*开始解析时进行相关操作，只执行一次
 	e.once.Do(func() {
+		fmt.Println("start resolver")
 		var ctx context.Context
 		ctx, e.cancel = context.WithCancel(context.Background())
 		e.start(ctx)
 	})
 }
 
-//*获取解析目标节点
+// *获取需要解析目标节点
 func (e *etcdResolver) getTargetNodes() []*Node {
 	e.tnsMux.RLock()
 	defer e.tnsMux.RUnlock()
@@ -127,12 +136,20 @@ func (e *etcdResolver) getTargetNodes() []*Node {
 	return nodes
 }
 
-//*解析所有需要解析的节点
+func (e *etcdResolver) DetTargetNodes(Name string) {
+	e.tnsMux.RLock()
+	defer e.tnsMux.RUnlock()
+	delete(e.targetNodeSet, Name)
+
+}
+
+// *解析所有需要解析的节点
 func (e *etcdResolver) resolverAll(ctx context.Context) {
 	nodes := e.getTargetNodes()
 	for _, node := range nodes {
 		//*根据前缀获取节点信息
 		cctx, cancel := context.WithTimeout(context.Background(), e.dialTimeout)
+		//*从etcd获取到键值对
 		rsp, err := e.cli.Get(cctx, node.buildPrefix(), etcdV3.WithPrefix())
 		cancel()
 		if err != nil {
@@ -146,6 +163,7 @@ func (e *etcdResolver) resolverAll(ctx context.Context) {
 				log.Errorf("get service node [%s] error:%s", node.Name, err.Error())
 				continue
 			}
+			//*将解析出的节点存储到ServiceNodes中
 			e.setServiceNodes(node.Name, n)
 		}
 	}
@@ -159,6 +177,7 @@ func (e *etcdResolver) resolverAll(ctx context.Context) {
 }
 
 func (e *etcdResolver) start(ctx context.Context) {
+	fmt.Println("开启执行start 协程")
 	if len(e.etcdAddrs) == 0 {
 		panic("discovery should call SetDiscoveryAddress or set env DISCOVERY_HOST")
 	}
@@ -175,13 +194,18 @@ func (e *etcdResolver) start(ctx context.Context) {
 	//*开始先全部解析
 	e.resolverAll(ctx)
 
-	ticker := time.NewTicker(tickerTime)
+	monitoredNodes := make(map[string]bool)
+	NodeCancel := make(map[string]func())
+	tickerResolver := time.NewTicker(tickerTime)
+	tickerWatch := time.NewTicker(tickerTime)
 
 	//*定时解析
 	go func() {
+		fmt.Println("执行定时解析")
 		for {
 			select {
-			case <-ticker.C:
+			case <-tickerResolver.C:
+				fmt.Println("定时解析ticker")
 				e.resolverAll(ctx)
 
 			case <-ctx.Done():
@@ -192,61 +216,115 @@ func (e *etcdResolver) start(ctx context.Context) {
 	}()
 
 	//*每个节点watch变化
-	nodes := e.getTargetNodes()
-	for i := range nodes {
-		go func(node *Node) {
-			wc := e.cli.Watch(ctx, node.buildPrefix(), etcdV3.WithPrefix())
-			for {
-				select {
-				case rsp := <-wc:
-					for _, event := range rsp.Events {
-						switch event.Type {
-						case etcdV3.EventTypePut:
-							n := &Node{}
-							err = json.Unmarshal(event.Kv.Value, n)
-							if err != nil {
-								log.Errorf("unmarshal to node error:%s", err.Error())
-								continue
-							}
-							e.setServiceNodes(node.Name, n)
-						case etcdV3.EventTypeDelete:
-							n := &Node{}
-							err = json.Unmarshal(event.Kv.Value, n)
-							if err != nil {
-								log.Errorf("unmarshal to node error:%s", err.Error())
-								continue
-							}
-							e.removeServiceNode(node.Name, n.Addr)
-						}
+	go func() {
+		fmt.Println("执行定时监听")
+		for {
+			select {
+			case <-tickerWatch.C:
+				nodes := e.getTargetNodes()
+				fmt.Println("定时监听ticker")
+				currentNodes := make(map[string]bool)
+				//*检查新增节点
+				for _, node := range nodes {
+
+					currentNodes[node.Name] = true
+					if !monitoredNodes[node.Name] {
+						cctx, cancel := context.WithCancel(ctx)
+						monitoredNodes[node.Name] = true
+						NodeCancel[node.Name] = cancel
+						fmt.Println("监听节点：", node.Name)
+						go e.watchNode(cctx, node)
 					}
-				case <-ctx.Done():
-					log.Infoln("resolver watcher exit")
-					return
 				}
+				if nodes == nil {
+					currentNodes = nil
+				}
+
+				//*检查删除的节点
+				for name := range monitoredNodes {
+					if !currentNodes[name] {
+						NodeCancel[name]()
+						delete(NodeCancel, name)
+						e.removeServiceNodeWithPrefix(name)
+						fmt.Println("删除节点%s", name)
+						delete(monitoredNodes, name)
+					}
+				}
+
+			case <-ctx.Done():
+				log.Infoln("resolver ticker exit")
+				return
 			}
-		}(nodes[i])
-	}
+		}
+	}()
+
 }
 
-//*关闭etcd服务发现器
-func (e *etcdResolver) stop() {
+func (e *etcdResolver) watchNode(ctx context.Context, node *Node) {
+	fmt.Println("watching node")
+	cctx, cancel := context.WithCancel(ctx)
+	defer cancel() //*确保在函数退出时取消上下文
+	wc := e.cli.Watch(cctx, node.buildPrefix(), etcdV3.WithPrefix())
+	for {
+		select {
+		case rsp := <-wc:
+			for _, event := range rsp.Events {
+				switch event.Type {
+				case etcdV3.EventTypePut:
+					n := &Node{}
+					err := json.Unmarshal(event.Kv.Value, n)
+					if err != nil {
+						log.Errorf("unmarshal to node error:%s", err.Error())
+						continue
+					}
+					e.setServiceNodes(node.Name, n)
+				case etcdV3.EventTypeDelete:
+					name, addr, err := node.SplitPath(event.Kv.String())
+					if err != nil {
+						panic("解析节点错误")
+
+					}
+					e.removeServiceNode(name, addr)
+					rsp, err := e.cli.Get(cctx, node.buildPrefix(), etcdV3.WithPrefix())
+					if err != nil {
+						log.Errorf("get keys for prefix %s error:%s", node.buildPrefix(), err.Error())
+						continue
+					}
+					if len(rsp.Kvs) == 0 {
+						//*如果所有相关键都被删除，取消协程
+						cancel()
+						log.Infof("node watcher for %s exited due to all keys deletion", node.Name)
+						return
+					}
+				}
+			}
+		case <-ctx.Done():
+			//*TODO log
+			return
+		}
+	}
+
+}
+
+// *关闭etcd服务发现器
+func (e *etcdResolver) Stop() {
 	log.Infoln("resolver stop")
 	e.cancel()
 }
 
+var EResolver *etcdResolver
 
-var eRegister *etcdRegister
-
-//*初始化etcd服务发现器
-func etcdResolverInit() {
+// *注册器初始化
+func EtcdResolverInit() {
 	envEtcdAddr := os.Getenv("DISCOVERY_HOST")
-	eRegister = &etcdRegister{
-		nodeSet:     make(map[string]*Node),
-		cli:         nil,
-		dialTimeout: time.Second * 3,
-		ttl:         3,
+	log.Infof("DISCOVERY_HOST: %s", envEtcdAddr)
+	EResolver = &etcdResolver{
+		mr:            make(map[string]resolver.Resolver),
+		dialTimeout:   time.Second * 3,
+		targetNodeSet: make(map[string]*Node),
+		serviceNodes:  make(map[string]map[string]*Node),
 	}
 	if len(envEtcdAddr) > 0 {
-		eRegister.etcdAddrs = strings.Split(envEtcdAddr, ";")
+		EResolver.etcdAddrs = strings.Split(envEtcdAddr, ";")
 	}
 }

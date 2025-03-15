@@ -64,7 +64,7 @@ Timeout = "1s"
 # RPC服务端配置
 [RPCServer]
 Network = "tcp"
-Addr = "0.0.0.0:50051"
+Addr = "0.0.0.0:50091"
 Timeout = "10s"
 IdleTimeout = "60s"
 MaxLifeTime = "3600s"

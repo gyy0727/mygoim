@@ -46,6 +46,8 @@ func (s *Server) Heartbeat(ctx context.Context, mid int64, key string) (err erro
 
 // *更新在线状态
 func (s *Server) RenewOnline(ctx context.Context, serverID string, roomCount map[string]int32) (allRoom map[string]int32, err error) {
+	//*TODO
+	return nil, nil
 	reply, err := s.rpcClient.RenewOnline(ctx, &logic.OnlineReq{
 		Server:    s.serverID,
 		RoomCount: roomCount,

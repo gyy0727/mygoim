@@ -8,9 +8,9 @@ import (
 )
 
 type IResolver interface {
-	getServiceNodes(host string) []*Node
-	setTargetNode(host string)
-	setManuResolver(host string, m resolver.Resolver)
+	GetServiceNodes(host string) []*Node
+	SetTargetNode(host string)
+	SetManuResolver(host string, m resolver.Resolver)
 }
 
 type manuResolver struct {
@@ -20,7 +20,7 @@ type manuResolver struct {
 }
 
 func (m manuResolver) ResolveNow(options resolver.ResolveNowOptions) {
-	nodes := m.r.getServiceNodes(m.target.URL.Host)
+	nodes := m.r.GetServiceNodes(m.target.URL.Host)
 	addresses := make([]resolver.Address, 0)
 	for i := range nodes {
 		addresses = append(addresses, resolver.Address{

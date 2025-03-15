@@ -12,7 +12,6 @@ import (
 
 	log "github.com/golang/glog"
 	etcdV3 "go.etcd.io/etcd/client/v3"
-	"google.golang.org/grpc/resolver"
 )
 
 type etcdRegister struct {
@@ -34,7 +33,7 @@ type etcdRegister struct {
 }
 
 // *新增注册的服务节点
-func (e *etcdRegister) addServiceNode(node *Node) {
+func (e *etcdRegister) AddServiceNode(node *Node) {
 	e.nodeSet[node.buildKey()] = node
 	//*新增注册节点的时候，开始执行注册任务
 	e.once.Do(
@@ -48,7 +47,8 @@ func (e *etcdRegister) addServiceNode(node *Node) {
 // *开始注册任务
 func (e *etcdRegister) start(ctx context.Context) {
 	if len(e.etcdAddrs) == 0 {
-		panic("discovery should call SetDiscoveryAddress or set env DISCOVERY_HOST")
+		panic("发现应调用SetDiscoveryAddress或设置env discovery_HOST")
+
 	}
 
 	//*连接etcd
@@ -81,13 +81,13 @@ func (e *etcdRegister) start(ctx context.Context) {
 	}
 
 	go func() {
-		defer log.Infoln("register goroutine exited") 
+		defer log.Infoln("register goroutine exited")
 		for {
 			select {
 			case kaRsp, ok := <-kc:
 				if !ok {
 					log.Errorln("etcd keepalive channel closed")
-					return 
+					return
 				}
 				if kaRsp != nil {
 					e.register(ctx)
@@ -100,7 +100,7 @@ func (e *etcdRegister) start(ctx context.Context) {
 	}()
 }
 
-//*注册节点
+// *将etcdRegister的nodeSet中的所有服务节点注册到etcd中
 func (e *etcdRegister) register(ctx context.Context) {
 	//*遍历所有的服务节点进行注册
 	for _, n := range e.nodeSet {
@@ -122,8 +122,8 @@ func (e *etcdRegister) register(ctx context.Context) {
 	}
 }
 
-//*停止注册任务
-func (e *etcdRegister) stop() {
+// *删除已经注册到etcd的所有键值对
+func (e *etcdRegister) Stop() {
 	log.Infoln("register stop")
 	//*退出注册任务
 	e.cancel()
@@ -142,18 +142,19 @@ func (e *etcdRegister) stop() {
 	}
 }
 
-var eResolver *etcdResolver
+var ERegister *etcdRegister
 
-//*注册器初始化
-func etcdRegisterInit() {
+// *初始化etcd服务发现器
+func EtcdRegisterInit() {
 	envEtcdAddr := os.Getenv("DISCOVERY_HOST")
-	eResolver = &etcdResolver{
-		mr:            make(map[string]resolver.Resolver),
-		dialTimeout:   time.Second * 3,
-		targetNodeSet: make(map[string]*Node),
-		serviceNodes:  make(map[string]map[string]*Node),
+	// log.Infof("DISCOVERY_HOST: %s", envEtcdAddr)
+	ERegister = &etcdRegister{
+		nodeSet:     make(map[string]*Node),
+		cli:         nil,
+		dialTimeout: time.Second * 3,
+		ttl:         3,
 	}
 	if len(envEtcdAddr) > 0 {
-		eResolver.etcdAddrs = strings.Split(envEtcdAddr, ";")
+		ERegister.etcdAddrs = strings.Split(envEtcdAddr, ";")
 	}
 }
