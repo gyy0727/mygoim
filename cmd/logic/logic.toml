@@ -1,0 +1,56 @@
+[env]
+    deployEnv = "prod"
+    weight = 10
+
+[discovery]
+    endpoints = ["http://47.115.200.76:2379"]
+    dialTimeout = 5
+    username = ""
+    password = ""
+    [discovery.tls]
+        certFile = ""
+        keyFile = ""
+        caFile = ""
+
+
+
+[backoff]
+    maxDelay = 300
+    baseDelay = 3
+    factor = 1.8
+    jitter = 0.3
+
+[rpcServer]
+    network = "tcp"
+    addr = "127.0.0.1:3119"
+    timeout = "1s"
+    idleTimeout = "60s"
+    maxLifeTime = "2h"
+    forceCloseWait = "20s"
+    keepAliveInterval = "60s"
+    keepAliveTimeout = "20s"
+
+[rpcClient]
+    dial = "1s"
+    timeout = "1s"
+
+[httpServer]
+    network = "tcp"
+    addr = "127.0.0.1:3111"
+    readTimeout = "1s"
+    writeTimeout = "1s"
+
+[kafka]
+    topic = "goim-push-topic"
+    brokers = ["47.115.200.76:9092"]
+
+[redis]
+    network = "tcp"
+    addr = "47.115.200.76:6379"
+    active = 60000
+    idle = 1024
+    dialTimeout = "200ms"
+    readTimeout = "500ms"
+    writeTimeout = "500ms"
+    idleTimeout = "120s"
+    expire = "30m"

@@ -12,11 +12,11 @@ func main() {
 
 	discovery.EtcdResolverInit()
 
-	discovery.EResolver.SetTargetNode("test")
+	discovery.EResolver.SetTargetNode("goim/logic")
 	go func() {
 		for {
 			time.Sleep(1 * time.Second)
-			node := discovery.EResolver.GetServiceNodes("test")
+			node := discovery.EResolver.GetServiceNodes("goim/logic")
 			if len(node) == 0 {
 				fmt.Println("node is nil")
 				fmt.Println("Number of goroutines:", runtime.NumGoroutine())
@@ -28,10 +28,10 @@ func main() {
 		}
 	}()
 	time.Sleep(5 * time.Second)
-	fmt.Println("删除要解析的目标节点")
-	discovery.EResolver.DetTargetNodes("test")
+	// fmt.Println("删除要解析的目标节点")
+	// discovery.EResolver.DetTargetNodes("test")
 	time.Sleep(10 * time.Second)
-	discovery.EResolver.Stop()
+	// discovery.EResolver.Stop()
 	time.Sleep(10 * time.Second)
 	fmt.Println("Number of goroutines--stop:", runtime.NumGoroutine())
 	// time.Sleep(5 * time.Minute)

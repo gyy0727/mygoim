@@ -153,6 +153,7 @@ func (s *Server) ServeTCP(conn *net.TCPConn, rp, wp *bytes.Pool, tr *xtime.Timer
 	step = 1
 	//*p用于写一个消息到协议缓冲区
 	if p, err = ch.CliProto.Set(); err == nil {
+		//*其实就是将
 		if ch.Mid, ch.Key, rid, accepts, hb, err = s.authTCP(ctx, rr, wr, p); err == nil {
 			ch.Watch(accepts...)
 			b = s.Bucket(ch.Key)
@@ -288,7 +289,6 @@ func (s *Server) dispatchTCP(conn *net.TCPConn, wr *bufio.Writer, wp *bytes.Pool
 			finish = true
 			goto failed
 		case protocol.ProtoReady:
-
 			for {
 				if p, err = ch.CliProto.Get(); err != nil {
 					break

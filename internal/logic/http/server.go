@@ -38,8 +38,8 @@ func (s *Server) initRouter() {
 	group.GET("/online/top", s.onlineTop)
 	group.GET("/online/room", s.onlineRoom)
 	group.GET("/online/total", s.onlineTotal)
-	group.GET("/nodes/weighted", s.nodesWeighted)
-	group.GET("/nodes/instances", s.nodesInstances)
+	// group.GET("/nodes/weighted", s.nodesWeighted)
+	// group.GET("/nodes/instances", s.nodesInstances)
 }
 
 // Close close the server.

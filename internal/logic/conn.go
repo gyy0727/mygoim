@@ -27,7 +27,7 @@ func (l *Logic) Connect(c context.Context, server, cookie string, token []byte) 
 	mid = params.Mid
 	roomID = params.RoomID
 	accepts = params.Accepts
-	hb = int64(l.c.Node.Heartbeat) * int64(l.c.Node.HeartbeatMax)
+	hb = 8
 	if key = params.Key; key == "" {
 		key = uuid.New().String()
 	}

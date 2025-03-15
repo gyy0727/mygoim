@@ -2,14 +2,18 @@ package grpc
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"time"
+
 	pb "github.com/gyy0727/mygoim/api/logic"
 	"github.com/gyy0727/mygoim/internal/logic"
 	"github.com/gyy0727/mygoim/internal/logic/conf"
+	discovery "github.com/gyy0727/mygoim/pkg/discovery"
+	ip "github.com/gyy0727/mygoim/pkg/ip"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/keepalive"
 	_ "google.golang.org/grpc/encoding/gzip"
+	"google.golang.org/grpc/keepalive"
 )
 
 // New logic grpc server
@@ -21,6 +25,13 @@ func New(c *conf.RPCServer, l *logic.Logic) *grpc.Server {
 		Timeout:               time.Duration(c.KeepAliveTimeout),
 		MaxConnectionAge:      time.Duration(c.MaxLifeTime),
 	})
+	addr, _ := ip.GetPublicIP()
+	fmt.Println("logic grpc server listen on %s", addr)
+	node := &discovery.Node{
+		Name: "goim.logic",
+		Addr: addr,
+	}
+	discovery.ERegister.AddServiceNode(node)
 	srv := grpc.NewServer(keepParams)
 	pb.RegisterLogicServer(srv, &server{l})
 	lis, err := net.Listen(c.Network, c.Addr)
@@ -40,7 +51,6 @@ type server struct {
 }
 
 var _ pb.LogicServer = &server{}
-
 
 // Connect connect a conn.
 func (s *server) Connect(ctx context.Context, req *pb.ConnectReq) (*pb.ConnectReply, error) {
@@ -87,5 +97,6 @@ func (s *server) Receive(ctx context.Context, req *pb.ReceiveReq) (*pb.ReceiveRe
 
 // nodes return nodes.
 func (s *server) Nodes(ctx context.Context, req *pb.NodesReq) (*pb.NodesReply, error) {
-	return s.srv.NodesWeighted(ctx, req.Platform, req.ClientIP), nil
+	// return s.srv.NodesWeighted(ctx, req.Platform, req.ClientIP), nil
+	return nil, nil
 }

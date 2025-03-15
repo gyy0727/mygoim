@@ -14,8 +14,8 @@ func main() {
 	// 创建一个新的 Kafka 生产者配置
 	config := sarama.NewConfig()
 	config.Producer.RequiredAcks = sarama.WaitForAll // 等待所有副本确认
-	config.Producer.Retry.Max = 5                   // 重试次数
-	config.Producer.Return.Successes = true         // 成功发送的消息将被返回
+	config.Producer.Retry.Max = 5                    // 重试次数
+	config.Producer.Return.Successes = true          // 成功发送的消息将被返回
 
 	// 创建一个新的 Kafka 生产者
 	producer, err := sarama.NewSyncProducer(brokers, config)
@@ -29,7 +29,7 @@ func main() {
 	}()
 
 	// 定义要发送的消息
-	topic := "test-topic"
+	topic := "goim-push-topic"
 	message := &sarama.ProducerMessage{
 		Topic: topic,
 		Value: sarama.StringEncoder("Hello, Kafka!"),

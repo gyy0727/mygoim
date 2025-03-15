@@ -27,7 +27,7 @@ const (
 // *新建一个rpc客户端
 func newLogicClient(c *conf.RPCClient) logic.LogicClient {
 	//*TODO 
-	return nil
+	// return nil
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(c.Dial))
 	defer cancel()
 	conn, err := grpc.DialContext(ctx, "etcd:///goim.logic",

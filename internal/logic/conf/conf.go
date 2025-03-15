@@ -12,8 +12,6 @@ import (
 
 var (
 	confPath  string  //*配置文件的路径
-	region    string  //*当前服务的区域（如 sh 表示上海）
-	zone      string  //*当前服务的可用区（如 sh001 表示上海 001 区）
 	deployEnv string  //*部署环境（如 dev 表示开发环境，prod 表示生产环境）
 	host      string  //*当前主机的主机名
 	weight    int64   //*负载均衡权重
@@ -25,9 +23,7 @@ func init() {
 		defHost, _   = os.Hostname()
 		defWeight, _ = strconv.ParseInt(os.Getenv("WEIGHT"), 10, 32)
 	)
-	flag.StringVar(&confPath, "conf", "logic-example.toml", "default config path")
-	flag.StringVar(&region, "region", os.Getenv("REGION"), "avaliable region. or use REGION env variable, value: sh etc.")
-	flag.StringVar(&zone, "zone", os.Getenv("ZONE"), "avaliable zone. or use ZONE env variable, value: sh001/sh002 etc.")
+	flag.StringVar(&confPath, "conf", "logic.toml", "default config path")
 	flag.StringVar(&deployEnv, "deploy.env", os.Getenv("DEPLOY_ENV"), "deploy env. or use DEPLOY_ENV env variable, value: dev/fat1/uat/pre/prod etc.")
 	flag.StringVar(&host, "host", defHost, "machine hostname. or use default machine hostname.")
 	flag.Int64Var(&weight, "weight", defWeight, "load balancing weight, or use WEIGHT env variable, value: 10 etc.")
@@ -43,13 +39,12 @@ func Init() (err error) {
 // *Default 函数返回一个默认的 Config 对象
 func Default() *Config {
 	return &Config{
-		Env: &Env{Region: region, Zone: zone, DeployEnv: deployEnv, Host: host, Weight: weight},
+		Env: &Env{DeployEnv: deployEnv, Host: host, Weight: weight},
 		Discovery: &EtcdConfig{
 			Endpoints:   []string{"http://127.0.0.1:2379"}, // 默认的 etcd 集群地址
 			DialTimeout: 5,                                 // 默认连接超时时间为 5 秒
 			Username:    "",                                // 默认无用户名
 			Password:    "",                                // 默认无密码
-			TLS:         nil,                               // 默认不使用 TLS
 		},
 		HTTPServer: &HTTPServer{
 			Network:      "tcp",
@@ -73,52 +68,32 @@ func Default() *Config {
 }
 
 type Config struct {
-	Env        *Env                //*环境相关的配置
-	Discovery  *EtcdConfig         //*服务发现相关的配置
-	RPCClient  *RPCClient          //*RPC 客户端配置
-	RPCServer  *RPCServer          //*RPC 服务端配置
-	HTTPServer *HTTPServer         //*HTTP 服务端配置
-	Kafka      *Kafka              //*Kafka 相关的配置
-	Redis      *Redis              //*Redis 相关的配置
-	Node       *Node               //*节点相关的配置
-	Backoff    *Backoff            //*重试策略相关的配置
-	Regions    map[string][]string //*区域映射配
+	Env        *Env        //*环境相关的配置
+	Discovery  *EtcdConfig //*服务发现相关的配置
+	RPCClient  *RPCClient  //*RPC 客户端配置
+	RPCServer  *RPCServer  //*RPC 服务端配置
+	HTTPServer *HTTPServer //*HTTP 服务端配置
+	Kafka      *Kafka      //*Kafka 相关的配置
+	Redis      *Redis      //*Redis 相关的配置
+	// Node       *Node               //*节点相关的配置
+	Backoff *Backoff            //*重试策略相关的配置
+	Regions map[string][]string //*区域映射配
 }
 
 type EtcdConfig struct {
-	Endpoints   []string   //*etcd 集群的端点列表
-	DialTimeout int        //*连接 etcd 的超时时间（单位：秒）
-	Username    string     //*etcd 用户名
-	Password    string     //*etcd 密码
-	TLS         *TLSConfig //*TLS 配置
-}
-
-type TLSConfig struct {
-	CertFile string //*客户端证书文件路径
-	KeyFile  string //*客户端私钥文件路径
-	CAFile   string //*CA 证书文件路径
+	Endpoints   []string //*etcd 集群的端点列表
+	DialTimeout int      //*连接 etcd 的超时时间（单位：秒）
+	Username    string   //*etcd 用户名
+	Password    string   //*etcd 密码
 }
 
 // *用于存储环境相关的配置
 type Env struct {
-	Region    string //*区域
-	Zone      string //*可用区
 	DeployEnv string //*部署环境
 	Host      string //*主机名
 	Weight    int64  //*负载均衡权重
 }
 
-// *结构体用于存储节点相关的配置
-type Node struct {
-	DefaultDomain string         //*默认域名
-	HostDomain    string         //*主机域名
-	TCPPort       int            //*tcp端口
-	WSPort        int            //*websocket端口
-	WSSPort       int            //*安全websocket端口(包含tls验证)
-	HeartbeatMax  int            //*心跳超时最大次数
-	Heartbeat     xtime.Duration //*心跳超时间隔
-	RegionWeight  float64        //*区域权重
-}
 
 // *重试策略的配置
 type Backoff struct {
