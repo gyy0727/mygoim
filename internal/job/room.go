@@ -93,7 +93,7 @@ func (r *Room) pushproc(batch int, sigTime time.Duration) {
 			}
 		}
 		_ = r.job.broadcastRoomRawBytes(r.id, buf.Buffer())
-		// after push to room channel, renew a buffer, let old buffer gc
+
 		buf = bytes.NewWriterSize(buf.Size())
 		n = 0
 		if r.c.Idle != 0 {

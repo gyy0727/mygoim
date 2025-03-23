@@ -11,6 +11,7 @@ import (
 	"github.com/gyy0727/mygoim/pkg/bytes"
 )
 
+//*根据消息类型进行推送
 func (j *Job) push(ctx context.Context, pushMsg *pb.PushMsg) (err error) {
 	switch pushMsg.Type {
 	case pb.PushMsg_PUSH:
@@ -25,7 +26,7 @@ func (j *Job) push(ctx context.Context, pushMsg *pb.PushMsg) (err error) {
 	return
 }
 
-// pushKeys push a message to a batch of subkeys.
+//*通过key进行推送
 func (j *Job) pushKeys(operation int32, serverID string, subKeys []string, body []byte) (err error) {
 	buf := bytes.NewWriterSize(len(body) + 64)
 	p := &protocol.Proto{
@@ -50,7 +51,7 @@ func (j *Job) pushKeys(operation int32, serverID string, subKeys []string, body 
 	return
 }
 
-// broadcast broadcast a message to all.
+//*广播消息
 func (j *Job) broadcast(operation int32, body []byte, speed int32) (err error) {
 	buf := bytes.NewWriterSize(len(body) + 64)
 	p := &protocol.Proto{
@@ -77,7 +78,7 @@ func (j *Job) broadcast(operation int32, body []byte, speed int32) (err error) {
 	return
 }
 
-// broadcastRoomRawBytes broadcast aggregation messages to room.
+//
 func (j *Job) broadcastRoomRawBytes(roomID string, body []byte) (err error) {
 	args := comet.BroadcastRoomReq{
 		RoomID: roomID,

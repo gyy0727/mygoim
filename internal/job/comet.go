@@ -3,11 +3,9 @@ package job
 import (
 	"context"
 	"fmt"
-	"net/url"
 	"sync/atomic"
 	"time"
 
-	"github.com/bilibili/discovery/naming"
 	log "github.com/golang/glog"
 	"github.com/gyy0727/mygoim/api/comet"
 	"github.com/gyy0727/mygoim/internal/job/conf"
@@ -29,7 +27,7 @@ const (
 	grpcInitialConnWindowSize = 1 << 24 //*初始化的连接窗口大小
 )
 
-// *新建一个CometRPC客户端
+// *新建一个CometRPC客户端,传入comet的地址
 func newCometClient(addr string) (comet.CometClient, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(time.Second))
 	defer cancel()
@@ -55,39 +53,35 @@ func newCometClient(addr string) (comet.CometClient, error) {
 }
 
 type Comet struct {
-	serverID      string            //*服务器id
-	client        comet.CometClient //*连接comet层的rpc客户端
-	pushChan      []chan *comet.PushMsgReq
-	roomChan      []chan *comet.BroadcastRoomReq
-	broadcastChan chan *comet.BroadcastReq
-	pushChanNum   uint64
-	roomChanNum   uint64
-	routineSize   uint64
-	ctx           context.Context
-	cancel        context.CancelFunc
+	serverID      string                         //*服务器id
+	client        comet.CometClient              //*连接comet层的rpc客户端
+	pushChan      []chan *comet.PushMsgReq       //*推送用户消息的管道
+	roomChan      []chan *comet.BroadcastRoomReq //*推送房间消息
+	broadcastChan chan *comet.BroadcastReq       //*广播消息的管道
+	pushChanNum   uint64                         //*推送用户消息管道数量
+	roomChanNum   uint64                         //*推送房间消息管道数量
+	routineSize   uint64                         //*协程数量
+	ctx           context.Context                //*上下文
+	cancel        context.CancelFunc             //*上下文取消函数
 }
 
-// NewComet new a comet.
-func NewComet(in *naming.Instance, c *conf.Comet) (*Comet, error) {
+func NewComet(addr string, c *conf.Comet) (*Comet, error) {
+	fmt.Println("addr:", addr)
+	
 	cmt := &Comet{
-		serverID:      in.Hostname,
+		serverID:      addr,
 		pushChan:      make([]chan *comet.PushMsgReq, c.RoutineSize),
 		roomChan:      make([]chan *comet.BroadcastRoomReq, c.RoutineSize),
 		broadcastChan: make(chan *comet.BroadcastReq, c.RoutineSize),
 		routineSize:   uint64(c.RoutineSize),
 	}
 	var grpcAddr string
-	for _, addrs := range in.Addrs {
-		u, err := url.Parse(addrs)
-		if err == nil && u.Scheme == "grpc" {
-			grpcAddr = u.Host
-		}
-	}
+
 	if grpcAddr == "" {
-		return nil, fmt.Errorf("invalid grpc address:%v", in.Addrs)
+		return nil, fmt.Errorf("invalid grpc address:%v", addr)
 	}
 	var err error
-	if cmt.client, err = newCometClient(grpcAddr); err != nil {
+	if cmt.client, err = newCometClient(addr); err != nil {
 		return nil, err
 	}
 	cmt.ctx, cmt.cancel = context.WithCancel(context.Background())
