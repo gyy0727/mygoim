@@ -3,7 +3,6 @@ package comet
 import (
 	"log"
 	"os"
-
 	"github.com/gyy0727/mygoim/internal/comet/conf"
 )
 

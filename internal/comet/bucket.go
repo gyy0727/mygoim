@@ -3,7 +3,6 @@ package comet
 import (
 	"sync"
 	"sync/atomic"
-
 	pb "github.com/gyy0727/mygoim/api/comet"
 	"github.com/gyy0727/mygoim/api/protocol"
 	"github.com/gyy0727/mygoim/internal/comet/conf"
@@ -31,6 +30,7 @@ func NewBucket(c *conf.Bucket) (b *Bucket) {
 	for i := uint64(0); i < c.RoutineAmount; i++ {
 		c := make(chan *pb.BroadcastRoomReq, c.RoutineSize)
 		b.routines[i] = c
+		//*NOTE 每个bucket创建32个协程用于分发消息
 		go b.roomproc(c)
 	}
 	logger.Info("创建Bucket")
@@ -49,7 +49,7 @@ func (b *Bucket) RoomCount() int {
 	return len(b.rooms)
 }
 
-// *返回包含在线用户的房间ID及其对应在线数,过滤离线房间
+// *返回包含在线用户的所有房间ID及其对应在线数,过滤离线房间
 func (b *Bucket) RoomsCount() (res map[string]int32) {
 	var (
 		roomID string
@@ -181,9 +181,6 @@ func (b *Bucket) Broadcast(p *protocol.Proto, op int32) {
 		}
 		_ = ch.Push(p)
 	}
-	// for _, singleRoom := range b.rooms {
-	// 	singleRoom.Push(p)
-	// }
 	b.cLock.RUnlock()
 }
 

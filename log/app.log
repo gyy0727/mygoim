@@ -177,3 +177,73 @@
 2025-03-14T17:18:00.705Z	[34mINFO[0m	comet/channel.go:29	新建通道	{"cli(环形缓冲区大小)": 5, "svr(s.singal通道大小)": 10}
 2025-03-14T17:18:08.706Z	[31mERROR[0m	comet/server_tcp.go:175	handshake failed	{"key": "", "error": "read tcp [::1]:8080->[::1]:44422: use of closed network connection"}
 2025-03-14T17:18:08.706Z	[31mERROR[0m	comet/server_tcp.go:144	tcp handshake timeout	{"key": "", "remoteIP": "[::1]:44422", "step": 2}
+2025-03-23T07:42:52.411Z	[34mINFO[0m	comet/bucket.go:36	创建Bucket
+2025-03-23T07:42:52.411Z	[34mINFO[0m	comet/bucket.go:36	创建Bucket
+2025-03-23T07:42:52.412Z	[34mINFO[0m	comet/bucket.go:36	创建Bucket
+2025-03-23T07:42:52.412Z	[34mINFO[0m	comet/bucket.go:36	创建Bucket
+2025-03-23T07:42:52.412Z	[34mINFO[0m	comet/bucket.go:36	创建Bucket
+2025-03-23T07:42:52.412Z	[34mINFO[0m	comet/bucket.go:36	创建Bucket
+2025-03-23T07:42:52.413Z	[34mINFO[0m	comet/bucket.go:36	创建Bucket
+2025-03-23T07:42:52.413Z	[34mINFO[0m	comet/bucket.go:36	创建Bucket
+2025-03-23T07:42:52.413Z	[34mINFO[0m	comet/bucket.go:36	创建Bucket
+2025-03-23T07:42:52.413Z	[34mINFO[0m	comet/bucket.go:36	创建Bucket
+2025-03-23T07:42:52.413Z	[34mINFO[0m	comet/bucket.go:36	创建Bucket
+2025-03-23T07:42:52.413Z	[34mINFO[0m	comet/bucket.go:36	创建Bucket
+2025-03-23T07:42:52.414Z	[34mINFO[0m	comet/bucket.go:36	创建Bucket
+2025-03-23T07:42:52.414Z	[34mINFO[0m	comet/bucket.go:36	创建Bucket
+2025-03-23T07:42:52.414Z	[34mINFO[0m	comet/bucket.go:36	创建Bucket
+2025-03-23T07:42:52.414Z	[34mINFO[0m	comet/bucket.go:36	创建Bucket
+2025-03-23T07:42:52.414Z	[34mINFO[0m	comet/bucket.go:36	创建Bucket
+2025-03-23T07:42:52.414Z	[34mINFO[0m	comet/bucket.go:36	创建Bucket
+2025-03-23T07:42:52.415Z	[34mINFO[0m	comet/bucket.go:36	创建Bucket
+2025-03-23T07:42:52.415Z	[34mINFO[0m	comet/bucket.go:36	创建Bucket
+2025-03-23T07:42:52.415Z	[34mINFO[0m	comet/bucket.go:36	创建Bucket
+2025-03-23T07:42:52.415Z	[34mINFO[0m	comet/bucket.go:36	创建Bucket
+2025-03-23T07:42:52.415Z	[34mINFO[0m	comet/bucket.go:36	创建Bucket
+2025-03-23T07:42:52.416Z	[34mINFO[0m	comet/bucket.go:36	创建Bucket
+2025-03-23T07:42:52.416Z	[34mINFO[0m	comet/bucket.go:36	创建Bucket
+2025-03-23T07:42:52.416Z	[34mINFO[0m	comet/bucket.go:36	创建Bucket
+2025-03-23T07:42:52.416Z	[34mINFO[0m	comet/bucket.go:36	创建Bucket
+2025-03-23T07:42:52.416Z	[34mINFO[0m	comet/bucket.go:36	创建Bucket
+2025-03-23T07:42:52.417Z	[34mINFO[0m	comet/bucket.go:36	创建Bucket
+2025-03-23T07:42:52.417Z	[34mINFO[0m	comet/bucket.go:36	创建Bucket
+2025-03-23T07:42:52.417Z	[34mINFO[0m	comet/bucket.go:36	创建Bucket
+2025-03-23T07:42:52.417Z	[34mINFO[0m	comet/bucket.go:36	创建Bucket
+2025-03-23T07:42:52.417Z	[34mINFO[0m	comet/server.go:80	初始化server	{"bucket size": 32}
+2025-03-23T07:42:52.417Z	[34mINFO[0m	comet/server.go:116	onlineproc执行中
+2025-03-23T07:42:52.417Z	[34mINFO[0m	comet/server_tcp.go:47	Start TCP listen	{"bind": ":8080"}
+2025-03-23T08:05:48.079Z	[34mINFO[0m	comet/bucket.go:36	创建Bucket
+2025-03-23T08:05:48.079Z	[34mINFO[0m	comet/bucket.go:36	创建Bucket
+2025-03-23T08:05:48.079Z	[34mINFO[0m	comet/bucket.go:36	创建Bucket
+2025-03-23T08:05:48.079Z	[34mINFO[0m	comet/bucket.go:36	创建Bucket
+2025-03-23T08:05:48.079Z	[34mINFO[0m	comet/bucket.go:36	创建Bucket
+2025-03-23T08:05:48.080Z	[34mINFO[0m	comet/bucket.go:36	创建Bucket
+2025-03-23T08:05:48.080Z	[34mINFO[0m	comet/bucket.go:36	创建Bucket
+2025-03-23T08:05:48.080Z	[34mINFO[0m	comet/bucket.go:36	创建Bucket
+2025-03-23T08:05:48.080Z	[34mINFO[0m	comet/bucket.go:36	创建Bucket
+2025-03-23T08:05:48.080Z	[34mINFO[0m	comet/bucket.go:36	创建Bucket
+2025-03-23T08:05:48.081Z	[34mINFO[0m	comet/bucket.go:36	创建Bucket
+2025-03-23T08:05:48.081Z	[34mINFO[0m	comet/bucket.go:36	创建Bucket
+2025-03-23T08:05:48.081Z	[34mINFO[0m	comet/bucket.go:36	创建Bucket
+2025-03-23T08:05:48.081Z	[34mINFO[0m	comet/bucket.go:36	创建Bucket
+2025-03-23T08:05:48.081Z	[34mINFO[0m	comet/bucket.go:36	创建Bucket
+2025-03-23T08:05:48.081Z	[34mINFO[0m	comet/bucket.go:36	创建Bucket
+2025-03-23T08:05:48.081Z	[34mINFO[0m	comet/bucket.go:36	创建Bucket
+2025-03-23T08:05:48.082Z	[34mINFO[0m	comet/bucket.go:36	创建Bucket
+2025-03-23T08:05:48.082Z	[34mINFO[0m	comet/bucket.go:36	创建Bucket
+2025-03-23T08:05:48.082Z	[34mINFO[0m	comet/bucket.go:36	创建Bucket
+2025-03-23T08:05:48.082Z	[34mINFO[0m	comet/bucket.go:36	创建Bucket
+2025-03-23T08:05:48.082Z	[34mINFO[0m	comet/bucket.go:36	创建Bucket
+2025-03-23T08:05:48.082Z	[34mINFO[0m	comet/bucket.go:36	创建Bucket
+2025-03-23T08:05:48.082Z	[34mINFO[0m	comet/bucket.go:36	创建Bucket
+2025-03-23T08:05:48.083Z	[34mINFO[0m	comet/bucket.go:36	创建Bucket
+2025-03-23T08:05:48.083Z	[34mINFO[0m	comet/bucket.go:36	创建Bucket
+2025-03-23T08:05:48.083Z	[34mINFO[0m	comet/bucket.go:36	创建Bucket
+2025-03-23T08:05:48.083Z	[34mINFO[0m	comet/bucket.go:36	创建Bucket
+2025-03-23T08:05:48.083Z	[34mINFO[0m	comet/bucket.go:36	创建Bucket
+2025-03-23T08:05:48.083Z	[34mINFO[0m	comet/bucket.go:36	创建Bucket
+2025-03-23T08:05:48.083Z	[34mINFO[0m	comet/bucket.go:36	创建Bucket
+2025-03-23T08:05:48.083Z	[34mINFO[0m	comet/bucket.go:36	创建Bucket
+2025-03-23T08:05:48.083Z	[34mINFO[0m	comet/server.go:80	初始化server	{"bucket size": 32}
+2025-03-23T08:05:48.084Z	[34mINFO[0m	comet/server.go:116	onlineproc执行中
+2025-03-23T08:05:48.084Z	[34mINFO[0m	comet/server_tcp.go:47	Start TCP listen	{"bind": ":8080"}
